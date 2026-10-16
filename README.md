@@ -1,6 +1,6 @@
-# ExcuseMe — NLP Workbench
+# ExcuseMoi — Text Studio
 
-**Project:** *ExcuseMe: Computational Analysis of Linguistic Deception and Excuse Plausibility*
+**Project:** *ExcuseMoi: Computational Analysis of Linguistic Deception and Excuse Plausibility*
 
 A full-stack React Native (Expo) + FastAPI application for exploring text through multiple NLP operations. The app combines pretrained models and classical linguistic analysis. It does **not** claim to determine whether a real person is lying.
 
