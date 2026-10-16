@@ -37,8 +37,11 @@ def get_tools():
 def analyze(request: AnalyzeRequest):
     try:
         results = nlp_service.analyze(request.text, request.operations, request.labels)
-    except (ValueError, RuntimeError) as exc:
+    except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        logger.exception("Required NLP model unavailable")
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("NLP analysis failed")
         raise HTTPException(
@@ -89,8 +92,11 @@ def compare(request: SimilarityRequest):
     try:
         stats_a = nlp_service.stats(request.text_a)
         stats_b = nlp_service.stats(request.text_b)
-    except (ValueError, RuntimeError) as exc:
+    except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except RuntimeError as exc:
+        logger.exception("Required NLP model unavailable for text comparison")
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except Exception as exc:
         logger.exception("Text comparison metrics failed")
         raise HTTPException(
