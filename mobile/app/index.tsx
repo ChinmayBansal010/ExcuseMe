@@ -154,11 +154,11 @@ export default function HomeScreen() {
           </View>
           <View style={[styles.status, { borderColor: online ? "#3A5330" : colors.border }]}>
             <View style={[styles.statusDot, { backgroundColor: online ? colors.green : colors.red }]} />
-            <Text style={styles.statusText}>{online ? "API ONLINE" : "API OFFLINE"}</Text>
+            <Text style={styles.statusText}>{width < 380 ? (online ? "ONLINE" : "OFFLINE") : (online ? "API ONLINE" : "API OFFLINE")}</Text>
           </View>
           <Pressable onPress={toggleTheme} accessibilityRole="button" accessibilityLabel={isDark ? "Switch to light theme" : "Switch to dark theme"} style={styles.themeToggle}>
             <ThemeIcon size={17} color={colors.text} />
-            <Text style={styles.themeToggleText}>{isDark ? "LIGHT" : "DARK"}</Text>
+            {width >= 380 ? <Text style={styles.themeToggleText}>{isDark ? "LIGHT" : "DARK"}</Text> : null}
           </Pressable>
         </View>
 
@@ -244,7 +244,7 @@ export default function HomeScreen() {
                 const active = selected.includes(tool.id);
                 const Icon = tool.icon;
                 return (
-                  <Pressable key={tool.id} onPress={() => toggle(tool.id)} style={[styles.toolCard, { width: width < 560 ? "100%" : width < 900 ? "48.5%" : "32%" }, active && styles.toolCardActive]}>
+                  <Pressable key={tool.id} onPress={() => toggle(tool.id)} style={[styles.toolCard, { width: width < 560 ? "100%" : width < 900 ? "48.5%" : "31%" }, active && styles.toolCardActive]}>
                     <View style={[styles.toolIcon, { backgroundColor: `${tool.tint}18` }]}><Icon size={19} color={tool.tint} /></View>
                     <View style={styles.toolInfo}>
                       <Text style={styles.toolTitle}>{tool.title}</Text>
