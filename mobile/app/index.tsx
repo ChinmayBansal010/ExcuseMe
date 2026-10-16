@@ -193,9 +193,14 @@ export default function HomeScreen() {
                 title="Choose operations"
                 detail={`${chosenCount} selected · ${filteredTools.length} tools shown`}
               />
-              <Pressable onPress={() => setSelected(TOOLS.map((t) => t.id))}>
-                <Text style={styles.actionText}>SELECT ALL</Text>
-              </Pressable>
+              <View style={styles.panelActions}>
+                <Pressable onPress={() => setSelected(TOOLS.map((t) => t.id))}>
+                  <Text style={styles.actionText}>SELECT ALL</Text>
+                </Pressable>
+                <Pressable onPress={() => setSelected([])}>
+                  <Text style={styles.actionText}>CLEAR ALL</Text>
+                </Pressable>
+              </View>
             </View>
 
             <TextInput
@@ -205,6 +210,10 @@ export default function HomeScreen() {
               placeholderTextColor={colors.muted}
               style={styles.singleInput}
             />
+
+            {filteredTools.length === 0 ? (
+              <Text style={styles.emptyText}>No tools match “{toolSearch}”. Try another search.</Text>
+            ) : null}
 
             <View style={styles.toolGrid}>
               {filteredTools.map((tool) => {
