@@ -193,6 +193,13 @@ export default function HomeScreen() {
           ))}
         </View>
 
+        <View style={styles.liveMetrics}>
+          <View style={styles.liveMetric}><Text style={styles.liveMetricValue}>{text.trim() ? text.trim().split(" ").filter(Boolean).length.toLocaleString() : "0"}</Text><Text style={styles.liveMetricLabel}>WORDS</Text></View>
+          <View style={styles.liveMetric}><Text style={styles.liveMetricValue}>{text.trim() ? (text.match(/[.!?]/g) || []).length.toLocaleString() : "0"}</Text><Text style={styles.liveMetricLabel}>SENTENCE MARKS</Text></View>
+          <View style={styles.liveMetric}><Text style={styles.liveMetricValue}>{text.trim() ? String(Math.max(1, Math.ceil(text.trim().split(" ").filter(Boolean).length / 200))) + " MIN" : "—"}</Text><Text style={styles.liveMetricLabel}>READ TIME</Text></View>
+          <View style={styles.liveMetric}><Text style={styles.liveMetricValue}>{text.length.toLocaleString()}</Text><Text style={styles.liveMetricLabel}>CHARACTERS</Text></View>
+        </View>
+
         <View style={styles.focusSection}>
           <View style={styles.focusHeading}><Text style={styles.focusTitle}>Start with a focus</Text><Text style={styles.focusHint}>PICK A LENS</Text></View>
           <View style={styles.presetRow}>
@@ -480,6 +487,10 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
   hero: { paddingTop: 2, paddingBottom: 0 },
+  liveMetrics: { flexDirection: "row", flexWrap: "wrap", backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 15, overflow: "hidden" },
+  liveMetric: { flexGrow: 1, flexBasis: 100, minWidth: 0, paddingVertical: 12, paddingHorizontal: 14, borderRightWidth: 1, borderRightColor: colors.border, gap: 4 },
+  liveMetricValue: { color: colors.text, fontSize: 19, fontWeight: "800", letterSpacing: -0.5 },
+  liveMetricLabel: { color: colors.muted, fontSize: 8, fontWeight: "800", letterSpacing: 1.2 },
   focusSection: { gap: 9 },
   caseSection: { gap: 9 },
   focusHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
