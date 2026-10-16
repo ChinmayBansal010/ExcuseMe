@@ -37,6 +37,32 @@ function pretty(value: any): string {
   return JSON.stringify(value, null, 2);
 }
 
+function ResultSkeleton({ colors, styles }: { colors: ThemeColors; styles: any }) {
+  return (
+    <View style={styles.resultsWrap} accessibilityLabel="Loading results" accessibilityRole="progressbar">
+      <View style={{ gap: 7 }}>
+        <View style={[styles.skeletonLine, { width: 156, height: 18, backgroundColor: colors.panel2 }]} />
+        <View style={[styles.skeletonLine, { width: 248, backgroundColor: colors.panel2 }]} />
+      </View>
+      {[0, 1, 2].map((card) => (
+        <Panel key={card} style={styles.resultPanel}>
+          <View style={[styles.skeletonLine, { width: 112, height: 10, backgroundColor: colors.panel2, marginBottom: 15 }]} />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 9 }}>
+            {[0, 1, 2, 3].map((item) => <View key={item} style={{ flexGrow: 1, flexBasis: 100, gap: 8, padding: 12, borderRadius: 10, backgroundColor: colors.panel2 }}><View style={[styles.skeletonLine, { width: "55%", backgroundColor: colors.border }]} /><View style={[styles.skeletonLine, { width: "82%", height: 19, backgroundColor: colors.border }]} /></View>)}
+          </View>
+          <View style={[styles.skeletonLine, { width: "94%", marginTop: 13, backgroundColor: colors.panel2 }]} />
+          <View style={[styles.skeletonLine, { width: "68%", marginTop: 8, backgroundColor: colors.panel2 }]} />
+        </Panel>
+      ))}
+      <Text style={styles.counter}>Running the selected models…</Text>
+    </View>
+  );
+}
+
+function DetailRow({ label, value, styles }: { label: string; value: any; styles: any }) {
+  return <View style={styles.detailRow}><Text style={styles.detailLabel}>{label.replaceAll("_", " ")}</Text><Text selectable style={styles.detailValue}>{typeof value === "object" && value !== null ? pretty(value) : String(value ?? "—")}</Text></View>;
+}
+
 export default function HomeScreen() {
   const { colors, isDark, toggleTheme } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -109,6 +135,7 @@ export default function HomeScreen() {
       return Alert.alert("Text too long", "Each passage must be under 20,000 characters.");
     }
     setLoading(true);
+    setSecondary(null);
     try {
       setSecondary(await compareTexts(text, textB));
     } catch (error: any) {
@@ -121,6 +148,7 @@ export default function HomeScreen() {
   const runSearch = async () => {
     if (!corpusQuery.trim()) return;
     setLoading(true);
+    setCorpusResult(null);
     try {
       setCorpusResult(await searchCorpus(corpusQuery));
     } catch (error: any) {
@@ -310,6 +338,7 @@ export default function HomeScreen() {
               {!loading ? <ChevronRight size={18} color={colors.bg} /> : null}
             </Pressable>
 
+            {loading && !result ? <ResultSkeleton colors={colors} styles={styles} /> : null}
             {result ? (
               <View style={styles.resultsWrap}>
                 <View style={styles.resultHeaderRow}>
@@ -345,10 +374,41 @@ export default function HomeScreen() {
                           </View>
                         ))}
                       </View>
+                    ) : key === "pos" ? (
+                      <View style={{ gap: 10 }}>
+                        <Text style={styles.counter}>{(value.tokens || []).length} tokens · lemma, POS, tag and dependency</Text>
+                        <ScrollView horizontal showsHorizontalScrollIndicator><View style={styles.tokenTable}>
+                          <View style={[styles.tokenRow, styles.tokenHeader]}>{["TOKEN", "LEMMA", "POS", "TAG", "DEPENDENCY", "HEAD"].map((label) => <Text key={label} style={[styles.tokenCell, styles.tokenHeaderText]}>{label}</Text>)}</View>
+                          {(value.tokens || []).map((token: any, i: number) => <View key={String(token.text) + "-" + i} style={[styles.tokenRow, i % 2 === 0 && { backgroundColor: colors.panel2 }]}>{[token.text, token.lemma, token.pos, token.tag, token.dependency, token.head].map((part: any, j: number) => <Text key={j} selectable style={[styles.tokenCell, j === 2 && { color: colors.accent, fontWeight: "800" }]}>{String(part ?? "—")}</Text>)}</View>)}
+                        </View></ScrollView>
+                      </View>
+                    ) : key === "syntax" ? (
+                      <View style={{ gap: 10 }}>{(value.sentences || []).map((sentence: any, i: number) => <View key={i} style={styles.syntaxCard}>
+                        <Text style={styles.resultBody}>{sentence.text}</Text>
+                        <View style={styles.syntaxRoot}><Text style={styles.metricLabel}>SENTENCE ROOT</Text><Text style={styles.syntaxRootValue}>{sentence.root || "—"}</Text></View>
+                        {(sentence.tokens || []).map((token: any, j: number) => <View key={String(token.text) + "-" + j} style={styles.detailRow}><View style={{ flex: 1 }}><Text style={styles.detailValue}>{token.text}</Text><Text style={styles.detailLabel}>{token.dependency} · head: {token.head}</Text></View><Text style={styles.syntaxChildren}>{(token.children || []).join(", ") || "No children"}</Text></View>)}
+                      </View>)}</View>
+                    ) : key === "language" ? (
+                      <View style={{ gap: 12 }}>
+                        <View style={styles.languageHero}><Languages size={22} color={colors.accent} /><View style={{ flex: 1 }}><Text style={styles.metricLabel}>DETECTED LANGUAGE</Text><Text style={styles.languageCode}>{String(value.language_code || "unknown").toUpperCase()}</Text></View></View>
+                        {(value.alternatives || []).map((item: any) => <View key={item.language} style={styles.barRow}><Text style={styles.barLabel}>{item.language}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: String(Math.max(2, item.probability * 100) + "%"), backgroundColor: colors.blue }]} /></View><Text style={styles.barScore}>{Math.round(item.probability * 100)}%</Text></View>)}
+                        {value.note ? <Text style={styles.resultBody}>{value.note}</Text> : null}
+                      </View>
+                    ) : key === "zero_shot" ? (
+                      <View style={{ gap: 12 }}>
+                        <Text style={styles.resultBody}>Your custom labels, ranked by model score.</Text>
+                        {(value.predictions || []).map((p: any) => <View key={p.label} style={{ gap: 6 }}><View style={styles.predictionRow}><Text style={styles.toolTitle}>{p.label}</Text><Text style={styles.scorePill}>{Math.round(p.score * 100)}%</Text></View><View style={[styles.barTrack, { height: 9 }]}><View style={[styles.barFill, { height: 9, width: String(Math.max(2, p.score * 100) + "%"), backgroundColor: colors.accent }]} /></View></View>)}
+                      </View>
                     ) : key === "entities" ? (
                       value.entities?.length ? <View style={styles.chipWrap}>{value.entities.map((e: any, i: number) => <View key={`${e.text}-${i}`} style={styles.entityChip}><Text style={styles.entityText}>{e.text}</Text><Text style={styles.entityLabel}>{e.label}</Text></View>)}</View> : <Text style={styles.emptyText}>No named entities detected.</Text>
                     ) : key === "keywords" ? (
-                      <View style={styles.chipWrap}>{value.keywords?.map((k: any) => <View key={k.term} style={styles.keywordChip}><Text style={styles.keywordText}>{k.term}</Text></View>)}</View>
+                      <View style={{ gap: 10 }}>
+                        {(value.keywords || []).length ? value.keywords.map((k: any, i: number) => <View key={k.term} style={styles.keywordResultRow}>
+                          <View style={styles.keywordRank}><Text style={styles.keywordRankText}>{i + 1}</Text></View>
+                          <View style={{ flex: 1, gap: 5 }}><Text style={styles.entityText}>{k.term}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: String(Math.max(3, (k.score / Math.max(...value.keywords.map((x: any) => x.score || 0), 0.0001)) * 100) + "%"}]} /></View></View>
+                          <Text style={styles.counter}>×{k.frequency ?? 0}</Text>
+                        </View>) : <Text style={styles.emptyText}>No keywords found.</Text>}
+                      </View>
                     ) : key === "excuse" ? (
                       <>
                         <View style={styles.scoreHeader}>
@@ -356,14 +416,15 @@ export default function HomeScreen() {
                           <Text style={styles.scorePill}>{value.score_label}</Text>
                         </View>
                         <Text style={styles.warningText}>{value.notice}</Text>
-                        {Object.entries(value.cue_counts || {}).map(([cue, count]) => (
-                          <View key={cue} style={styles.cueRow}><Text style={styles.cueLabel}>{cue.replaceAll("_", " ")}</Text><Text style={styles.cueCount}>{String(count)}</Text></View>
-                        ))}
+                        {Object.entries(value.cue_counts || {}).map(([cue, count]) => <View key={cue} style={styles.cueRow}><Text style={styles.cueLabel}>{cue.replaceAll("_", " ")}</Text><Text style={styles.cueCount}>{String(count)}</Text></View>)}
+                        <Text style={styles.fieldLabel}>LINGUISTIC CUES FOUND</Text>
+                        {Object.entries(value.linguistic_cues || {}).map(([cue, terms]: any) => <View key={cue} style={styles.detailRow}><Text style={styles.detailLabel}>{cue.replaceAll("_", " ")}</Text><View style={styles.chipWrap}>{(terms || []).length ? terms.map((term: string) => <View key={term} style={styles.keywordChip}><Text style={styles.keywordText}>{term}</Text></View>) : <Text style={styles.counter}>None detected</Text>}</View></View>)}
+                        {value.questions_to_consider?.length ? <View style={{ gap: 7, marginTop: 6 }}><Text style={styles.fieldLabel}>QUESTIONS TO CONSIDER</Text>{value.questions_to_consider.map((q: string) => <Text key={q} style={styles.resultBody}>• {q}</Text>)}</View> : null}
                       </>
                     ) : key === "summary" ? (
-                      <Text style={styles.resultBody}>{value.summary}</Text>
+                      <View style={{ gap: 10 }}><Text style={styles.resultBody}>{value.summary}</Text>{value.note ? <Text style={styles.counter}>{value.note}</Text> : null}{value.model ? <Text style={styles.counter}>Model: {value.model}</Text> : null}</View>
                     ) : (
-                      <Text selectable style={styles.jsonText}>{pretty(value)}</Text>
+                      <View style={{ gap: 8 }}>{Object.entries(value || {}).filter(([field]) => field !== "model").map(([field, detail]) => <DetailRow key={field} label={field} value={detail} styles={styles} />)}{value.model ? <Text style={styles.counter}>Model: {value.model}</Text> : null}</View>
                     )}
                   </Panel>
                 ))}
@@ -386,6 +447,7 @@ export default function HomeScreen() {
                 <Text style={styles.primaryButtonText}>Compare meaning</Text>
               </Pressable>
             </Panel>
+            {loading && !secondary ? <ResultSkeleton colors={colors} styles={styles} /> : null}
             {secondary ? (
               <View style={styles.comparisonResults}>
                 <Panel>
@@ -440,6 +502,7 @@ export default function HomeScreen() {
                 <Text style={styles.primaryButtonText}>Search corpus</Text>
               </Pressable>
             </Panel>
+            {loading && !corpusResult ? <ResultSkeleton colors={colors} styles={styles} /> : null}
             {corpusResult ? (
               <View style={{ gap: 10, marginTop: 14 }}>
                 <SectionTitle title="Retrieved passages" detail={`${corpusResult.indexed_passages ?? 0} passages in local index`} />
@@ -581,6 +644,24 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   cueCount: { color: colors.text, fontSize: 12, fontWeight: "800" },
   resultBody: { color: colors.text, fontSize: 13, lineHeight: 20 },
   jsonText: { color: colors.code, fontSize: 10, lineHeight: 15 },
+  skeletonLine: { height: 9, borderRadius: 6 },
+  detailRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12, paddingVertical: 9, borderBottomWidth: 1, borderBottomColor: colors.border },
+  detailLabel: { color: colors.muted, fontSize: 10, fontWeight: "800", textTransform: "capitalize", minWidth: 90, maxWidth: 125 },
+  detailValue: { color: colors.text, fontSize: 12, lineHeight: 18, flex: 1, textAlign: "right" },
+  languageHero: { flexDirection: "row", alignItems: "center", gap: 12, padding: 14, borderRadius: 12, backgroundColor: colors.panel2 },
+  languageCode: { color: colors.text, fontSize: 23, fontWeight: "800", marginTop: 3 },
+  tokenTable: { minWidth: 680, borderWidth: 1, borderColor: colors.border, borderRadius: 10, overflow: "hidden" },
+  tokenRow: { flexDirection: "row", alignItems: "center", minHeight: 38, borderBottomWidth: 1, borderBottomColor: colors.border },
+  tokenHeader: { backgroundColor: colors.panel2 },
+  tokenCell: { width: 112, paddingHorizontal: 10, paddingVertical: 9, color: colors.text, fontSize: 11 },
+  tokenHeaderText: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 0.7 },
+  syntaxCard: { borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 12, gap: 9 },
+  syntaxRoot: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.panel2, borderRadius: 8, padding: 10 },
+  syntaxRootValue: { color: colors.accent, fontSize: 14, fontWeight: "800" },
+  syntaxChildren: { color: colors.muted, fontSize: 10, flex: 1, textAlign: "right" },
+  keywordResultRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 4 },
+  keywordRank: { width: 26, height: 26, borderRadius: 8, backgroundColor: colors.panel2, alignItems: "center", justifyContent: "center" },
+  keywordRankText: { color: colors.accent, fontSize: 10, fontWeight: "800" },
   disclaimer: { color: colors.muted, fontSize: 10, lineHeight: 16, textAlign: "center", paddingHorizontal: 10 },
   singleInput: { color: colors.text, backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 13, fontSize: 13, marginTop: 4 },
   fieldLabel: { color: colors.muted, fontSize: 10, fontWeight: "800", letterSpacing: 1, marginTop: 10 },
