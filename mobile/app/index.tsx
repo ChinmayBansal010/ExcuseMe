@@ -9,6 +9,7 @@ import {
 } from "lucide-react-native";
 import { Panel } from "@/components/Panel";
 import { SectionTitle } from "@/components/SectionTitle";
+import { OrbitScene } from "@/components/OrbitScene";
 import { analyzeText, compareTexts, healthCheck, searchCorpus, Operation } from "@/lib/api";
 import { colors as baseColors } from "@/theme/colors";
 import { useAppTheme, type ThemeColors } from "@/theme/ThemeContext";
@@ -162,14 +163,17 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.hero}>
-          <Text style={styles.kicker}>THE TEXT WORKSPACE</Text>
-          <Text style={[styles.headline, width < 480 && { fontSize: 37, lineHeight: 40 }]}>A closer look{"\n"}at your <Text style={styles.headlineAccent}>text.</Text></Text>
-          <Text style={styles.subtitle}>Explore tone, structure, key phrases and meaning. Compare passages or search indexed examples when you need more context.</Text>
-          <View style={styles.heroMeta}>
-            <View style={styles.metaChip}><Text style={styles.metaChipText}>11 TEXT TOOLS</Text></View>
-            <View style={styles.metaChip}><Text style={styles.metaChipText}>ANALYZE · COMPARE · SEARCH</Text></View>
+        <View style={[styles.hero, width >= 760 && styles.heroWide]}>
+          <View style={styles.heroCopy}>
+            <Text style={styles.kicker}>A TOOLKIT FOR EVERYDAY WRITING</Text>
+            <Text style={[styles.headline, width < 480 && { fontSize: 35, lineHeight: 38 }]}>Make more sense{"\\n"}of your <Text style={styles.headlineAccent}>text.</Text></Text>
+            <Text style={styles.subtitle}>Explore tone, structure and meaning. Compare passages or search indexed examples — all in one focused workspace.</Text>
+            <View style={styles.heroMeta}>
+              <View style={styles.metaChip}><Text style={styles.metaChipText}>11 TEXT TOOLS</Text></View>
+              <View style={styles.metaChip}><Text style={styles.metaChipText}>ANALYZE · COMPARE · SEARCH</Text></View>
+            </View>
           </View>
+          {width >= 760 ? <View style={styles.heroVisual}><OrbitScene dark={isDark} /><View style={styles.visualCaption}><Text style={styles.visualCaptionTitle}>WORDS HAVE LAYERS</Text><Text style={styles.visualCaptionText}>Structure · tone · context</Text></View></View> : null}
         </View>
 
         <View style={styles.tabs}>
@@ -437,7 +441,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   themeToggle: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 99 },
   themeToggleText: { color: colors.text, fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
   page: { padding: 14, paddingBottom: 32, gap: 14, maxWidth: 1320, width: "100%", alignSelf: "center" },
-  topbar: { flexDirection: "row", alignItems: "center", gap: 11, marginTop: 8 },
+  topbar: { flexDirection: "row", alignItems: "center", gap: 11, marginTop: 2 },
   brandMark: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" },
   brand: { color: colors.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.7 },
   dot: { color: colors.accent },
@@ -445,7 +449,13 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   status: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 99 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
-  hero: { paddingTop: 10, paddingBottom: 2 },
+  hero: { paddingTop: 8, paddingBottom: 2 },
+  heroWide: { flexDirection: "row", alignItems: "center", gap: 22, minHeight: 250 },
+  heroCopy: { flex: 1, minWidth: 0 },
+  heroVisual: { width: "36%", minWidth: 220, maxWidth: 380, minHeight: 250, justifyContent: "center", alignItems: "center", borderRadius: 22, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
+  visualCaption: { alignItems: "center", marginTop: -12, paddingBottom: 14 },
+  visualCaptionTitle: { color: colors.text, fontSize: 10, fontWeight: "800", letterSpacing: 1.8 },
+  visualCaptionText: { color: colors.muted, fontSize: 11, marginTop: 5 },
   kicker: { color: colors.accent, fontSize: 10, fontWeight: "800", letterSpacing: 2.5, marginBottom: 9 },
   headline: { color: colors.text, fontSize: 42, lineHeight: 44, fontWeight: "800", letterSpacing: -1.8 },
   headlineAccent: { color: colors.accent },
@@ -458,15 +468,15 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   tabActive: { backgroundColor: colors.panel2 },
   tabText: { color: colors.muted, fontSize: 12, fontWeight: "600" },
   tabTextActive: { color: colors.text },
-  panelHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  panelHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10, flexWrap: "wrap" },
   panelActions: { flexDirection: "row", gap: 12 },
-  resultHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  resultHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 10, flexWrap: "wrap" },
   actionText: { color: colors.accent, fontSize: 9, fontWeight: "800", letterSpacing: 0.8, paddingTop: 4 },
   textArea: { minHeight: 112, color: colors.text, backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, fontSize: 14, lineHeight: 21, marginTop: 4 },
   inputFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 9 },
   counter: { color: colors.muted, fontSize: 10 },
   counterLimit: { color: colors.orange },
-  sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
+  sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 8 },
   toolGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   toolCard: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 15, padding: 11, width: "48.5%", minHeight: 78 },
   toolCardActive: { borderColor: colors.selectedBorder, backgroundColor: colors.selected },
