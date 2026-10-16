@@ -1,19 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View, useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Activity, AudioLines, BrainCircuit, Check, ChevronRight, CircleAlert, FileText,
-  Gauge, Languages, Search, Sparkles, Tags, TextSearch, WandSparkles,
+  Gauge, Languages, Moon, Search, Sparkles, Sun, Tags, TextSearch, WandSparkles,
 } from "lucide-react-native";
 import { Panel } from "@/components/Panel";
 import { SectionTitle } from "@/components/SectionTitle";
 import { analyzeText, compareTexts, healthCheck, searchCorpus, Operation } from "@/lib/api";
-import { colors } from "@/theme/colors";
+import { colors as baseColors } from "@/theme/colors";
+import { useAppTheme, type ThemeColors } from "@/theme/ThemeContext";
 
 const TOOLS: { id: Operation; title: string; desc: string; icon: any; tint: string }[] = [
-  { id: "language", title: "Language ID", desc: "Detect language and alternatives", icon: Languages, tint: colors.orange },
+  { id: "language", title: "Language ID", desc: "Detect language and alternatives", icon: Languages, tint: baseColors.orange },
   { id: "stats", title: "Text metrics", desc: "Readability, vocabulary, sentence stats", icon: Gauge, tint: colors.accent },
   { id: "sentiment", title: "Sentiment", desc: "Positive or negative tone", icon: Activity, tint: colors.blue },
   { id: "emotion", title: "Emotion map", desc: "Rank emotional signals", icon: AudioLines, tint: colors.purple },
@@ -36,6 +37,10 @@ function pretty(value: any): string {
 }
 
 export default function HomeScreen() {
+  const { colors, isDark, toggleTheme } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const [splashVisible, setSplashVisible] = useState(true);
+  const ThemeIcon = isDark ? Sun : Moon;
   const [text, setText] = useState(DEMO);
   const [selected, setSelected] = useState<Operation[]>(["stats", "sentiment", "emotion", "entities", "keywords", "excuse"]);
   const [labels, setLabels] = useState("excuse, apology, promise, complaint, joke");
@@ -51,6 +56,8 @@ export default function HomeScreen() {
 
   useEffect(() => {
     healthCheck().then(setOnline).catch(() => setOnline(false));
+    const splashTimer = setTimeout(() => setSplashVisible(false), 900);
+    return () => clearTimeout(splashTimer);
   }, []);
 
   const chosenCount = selected.length;
@@ -122,10 +129,23 @@ export default function HomeScreen() {
   };
 
   const resultCards = useMemo(() => result?.results ? Object.entries(result.results) : [], [result]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  if (splashVisible) {
+    return (
+      <SafeAreaView style={styles.splash}>
+        <View style={styles.splashBrandMark}><Sparkles size={28} color={colors.bg} /></View>
+        <Text style={styles.splashBrand}>ExcuseMe<Text style={styles.dot}>.</Text></Text>
+        <Text style={styles.splashTagline}>Language, intent, context.</Text>
+        <View style={styles.splashTrack}><View style={styles.splashProgress} /></View>
+        <Text style={styles.splashCaption}>TEXT ANALYSIS WORKBENCH</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width < 480 ? 14 : 24 }]} keyboardShouldPersistTaps="handled">
         <View style={styles.topbar}>
           <View style={styles.brandMark}><Sparkles size={21} color={colors.bg} /></View>
           <View style={{ flex: 1 }}>
@@ -140,7 +160,7 @@ export default function HomeScreen() {
 
         <View style={styles.hero}>
           <Text style={styles.kicker}>TEXT, DECODED.</Text>
-          <Text style={styles.headline}>Read between{"\n"}the <Text style={styles.headlineAccent}>lines.</Text></Text>
+          <Text style={[styles.headline, width < 480 && { fontSize: 37, lineHeight: 40 }]}>Read between{"\n"}the <Text style={styles.headlineAccent}>lines.</Text></Text>
           <Text style={styles.subtitle}>A multi-tool NLP workbench for language, meaning, emotion and intent cues.</Text>
           <View style={styles.heroMeta}>
             <View style={styles.metaChip}><Text style={styles.metaChipText}>11 NLP TOOLS</Text></View>
@@ -220,7 +240,7 @@ export default function HomeScreen() {
                 const active = selected.includes(tool.id);
                 const Icon = tool.icon;
                 return (
-                  <Pressable key={tool.id} onPress={() => toggle(tool.id)} style={[styles.toolCard, active && styles.toolCardActive]}>
+                  <Pressable key={tool.id} onPress={() => toggle(tool.id)} style={[styles.toolCard, { width: width < 560 ? "100%" : width < 900 ? "48.5%" : "32%" }, active && styles.toolCardActive]}>
                     <View style={[styles.toolIcon, { backgroundColor: `${tool.tint}18` }]}><Icon size={19} color={tool.tint} /></View>
                     <View style={styles.toolInfo}>
                       <Text style={styles.toolTitle}>{tool.title}</Text>
@@ -401,8 +421,17 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
+  splash: { flex: 1, backgroundColor: colors.bg, alignItems: "center", justifyContent: "center", padding: 28 },
+  splashBrandMark: { width: 68, height: 68, borderRadius: 23, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center", marginBottom: 20 },
+  splashBrand: { color: colors.text, fontSize: 34, fontWeight: "800", letterSpacing: -1.2 },
+  splashTagline: { color: colors.muted, fontSize: 14, marginTop: 8 },
+  splashTrack: { width: 132, height: 3, borderRadius: 99, backgroundColor: colors.border, overflow: "hidden", marginTop: 34 },
+  splashProgress: { width: "68%", height: 3, backgroundColor: colors.accent, borderRadius: 99 },
+  splashCaption: { color: colors.muted, fontSize: 9, fontWeight: "700", letterSpacing: 2, marginTop: 17 },
+  themeToggle: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 99 },
+  themeToggleText: { color: colors.text, fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
   page: { padding: 20, paddingBottom: 50, gap: 18, maxWidth: 900, width: "100%", alignSelf: "center" },
   topbar: { flexDirection: "row", alignItems: "center", gap: 11, marginTop: 8 },
   brandMark: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" },
@@ -429,14 +458,14 @@ const styles = StyleSheet.create({
   panelActions: { flexDirection: "row", gap: 12 },
   resultHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   actionText: { color: colors.accent, fontSize: 9, fontWeight: "800", letterSpacing: 0.8, paddingTop: 4 },
-  textArea: { minHeight: 140, color: colors.text, backgroundColor: "#0B0F16", borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, fontSize: 14, lineHeight: 21, marginTop: 4 },
+  textArea: { minHeight: 140, color: colors.text, backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, fontSize: 14, lineHeight: 21, marginTop: 4 },
   inputFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 9 },
   counter: { color: colors.muted, fontSize: 10 },
   counterLimit: { color: colors.orange },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   toolGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   toolCard: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 15, padding: 11, width: "48.5%", minHeight: 78 },
-  toolCardActive: { borderColor: "#526B3A", backgroundColor: "#111A11" },
+  toolCardActive: { borderColor: colors.selectedBorder, backgroundColor: colors.selected },
   toolIcon: { width: 34, height: 34, borderRadius: 11, alignItems: "center", justifyContent: "center" },
   toolInfo: { flex: 1, gap: 4 },
   toolTitle: { color: colors.text, fontSize: 12, fontWeight: "700" },
@@ -460,7 +489,7 @@ const styles = StyleSheet.create({
   comparisonDelta: { color: colors.accent, fontSize: 12, fontWeight: "800" },
   predictionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   predictionMain: { color: colors.text, fontSize: 20, fontWeight: "800" },
-  scorePill: { color: colors.accent, fontSize: 10, fontWeight: "700", backgroundColor: "#1D2A18", borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
+  scorePill: { color: colors.accent, fontSize: 10, fontWeight: "700", backgroundColor: colors.pill, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
   barRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   barLabel: { width: 86, color: colors.text, fontSize: 11, textTransform: "capitalize" },
   barTrack: { flex: 1, height: 6, backgroundColor: colors.panel2, borderRadius: 99, overflow: "hidden" },
@@ -478,7 +507,7 @@ const styles = StyleSheet.create({
   cueLabel: { color: colors.muted, fontSize: 12, textTransform: "capitalize" },
   cueCount: { color: colors.text, fontSize: 12, fontWeight: "800" },
   resultBody: { color: colors.text, fontSize: 13, lineHeight: 20 },
-  jsonText: { color: "#C3D0E2", fontSize: 10, lineHeight: 15 },
+  jsonText: { color: colors.code, fontSize: 10, lineHeight: 15 },
   disclaimer: { color: colors.muted, fontSize: 10, lineHeight: 16, textAlign: "center", paddingHorizontal: 10 },
   singleInput: { color: colors.text, backgroundColor: "#0B0F16", borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 13, fontSize: 13, marginTop: 4 },
   fieldLabel: { color: colors.muted, fontSize: 10, fontWeight: "800", letterSpacing: 1, marginTop: 10 },
