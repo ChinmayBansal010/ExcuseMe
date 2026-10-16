@@ -4,42 +4,50 @@ export type Operation =
   | "stats" | "sentiment" | "emotion" | "entities" | "keywords"
   | "pos" | "summary" | "zero_shot" | "excuse" | "syntax" | "language";
 
-export async function analyzeText(text: string, operations: Operation[], labels: string[] = []) {
-  const response = await fetch(`${API_URL}/api/v1/analyze`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, operations, labels }),
-  });
-  const payload = await response.json();
+async function readResponse(response: Response) {
+  let payload: any;
+  try {
+    payload = await response.json();
+  } catch {
+    payload = { detail: response.statusText || "The server returned an unreadable response." };
+  }
+
   if (!response.ok) {
-    throw new Error(payload.detail || `Request failed (${response.status})`);
+    const detail = payload?.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((item: any) => item.msg || String(item)).join("; ")
+      : detail;
+    throw new Error(message || `Request failed (${response.status})`);
   }
   return payload;
 }
 
-export async function compareTexts(text_a: string, text_b: string) {
-  const response = await fetch(`${API_URL}/api/v1/compare`, {
+async function postJson(path: string, body: Record<string, unknown>) {
+  const response = await fetch(`${API_URL}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text_a, text_b }),
+    body: JSON.stringify(body),
   });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload.detail || "Similarity request failed");
-  return payload;
+  return readResponse(response);
+}
+
+export async function analyzeText(text: string, operations: Operation[], labels: string[] = []) {
+  return postJson("/api/v1/analyze", { text, operations, labels });
+}
+
+export async function compareTexts(text_a: string, text_b: string) {
+  return postJson("/api/v1/compare", { text_a, text_b });
 }
 
 export async function searchCorpus(query: string, top_k = 5) {
-  const response = await fetch(`${API_URL}/api/v1/search-corpus`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, top_k }),
-  });
-  const payload = await response.json();
-  if (!response.ok) throw new Error(payload.detail || "Corpus search failed");
-  return payload;
+  return postJson("/api/v1/search-corpus", { query, top_k });
 }
 
 export async function healthCheck() {
-  const response = await fetch(`${API_URL}/health`);
-  return response.ok;
+  try {
+    const response = await fetch(`${API_URL}/health`);
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
