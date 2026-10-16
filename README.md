@@ -6,7 +6,8 @@ A full-stack React Native (Expo) + FastAPI application for exploring text throug
 
 ## Capabilities
 
-- Language identification\n- Text statistics and readability
+- Language identification
+- Text statistics and readability
 - Sentence splitting and tokenization
 - Part-of-speech tagging and dependency parsing
 - Named-entity recognition
@@ -16,6 +17,8 @@ A full-stack React Native (Expo) + FastAPI application for exploring text throug
 - Zero-shot classification using user-supplied labels
 - Abstractive summarization
 - Semantic similarity between two texts
+- Side-by-side text metrics, including word, sentence, character and readability differences
+- Shareable JSON analysis results
 - Text embeddings
 - Excuse structure score based on explicit linguistic components (not a truth/lie probability)
 - Excuse analysis: linguistic cues, not a truth verdict
@@ -107,7 +110,8 @@ pytest
 - `GET /health`
 - `GET /api/v1/tools`
 - `POST /api/v1/analyze`
-- `POST /api/v1/similarity`
+- `POST /api/v1/similarity` — cosine similarity between two passages
+- `POST /api/v1/compare` — similarity plus side-by-side text metrics and B-minus-A differences
 - `POST /api/v1/search-corpus`
 
 Example request:
