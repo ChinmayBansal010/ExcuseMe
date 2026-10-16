@@ -1,0 +1,17 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+node_modules/
+.expo/
+web-build/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+*.log
+.DS_Store
+Thumbs.db

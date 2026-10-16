@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "ExcuseMe",
+    "slug": "excuseme",
+    "scheme": "excuseme",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
