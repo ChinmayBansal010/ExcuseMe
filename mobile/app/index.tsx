@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActivityIndicator, Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
@@ -27,6 +27,7 @@ const TOOLS: { id: Operation; title: string; desc: string; icon: any; tint: stri
 ];
 
 const DEMO = "I was going to submit the assignment yesterday, but my laptop stopped working right before the deadline. I contacted my teammate and promised to send the file this evening.";
+const MAX_TEXT_CHARS = 20000;
 
 function pretty(value: any): string {
   if (value === null || value === undefined) return "—";
@@ -58,19 +59,34 @@ export default function HomeScreen() {
     .toLowerCase()
     .includes(toolSearch.toLowerCase().trim())
   );
+  const shareResult = async () => {
+    if (!result) return;
+    try {
+      await Share.share({
+        title: "ExcuseMe analysis",
+        message: JSON.stringify({ text, results: result.results, warnings: result.warnings }, null, 2),
+      });
+    } catch (error: any) {
+      Alert.alert("Share failed", error?.message || "Could not share the analysis result.");
+    }
+  };
+
   const toggle = (id: Operation) => {
     setSelected((current) => current.includes(id) ? current.filter((x) => x !== id) : [...current, id]);
   };
 
   const runAnalysis = async () => {
     if (!text.trim()) return Alert.alert("Text required", "Paste or type some text first.");
+    if (text.length > MAX_TEXT_CHARS) return Alert.alert("Text too long", "Keep the input under 20,000 characters.");
     if (!selected.length) return Alert.alert("Choose a tool", "Select at least one NLP operation.");
+    const labelList = labels.split(",").map((x) => x.trim()).filter(Boolean);
+    if (selected.includes("zero_shot") && labelList.length < 2) {
+      return Alert.alert("More labels required", "Custom classification needs at least two comma-separated labels.");
+    }
     setLoading(true);
     setResult(null);
     try {
-      const labelList = labels.split(",").map((x) => x.trim()).filter(Boolean);
-      const operations = selected.includes("zero_shot") ? selected : selected;
-      setResult(await analyzeText(text, operations, labelList));
+      setResult(await analyzeText(text, selected, labelList));
     } catch (error: any) {
       Alert.alert("Analysis failed", error.message || "Could not reach the API.");
     } finally {
@@ -80,6 +96,9 @@ export default function HomeScreen() {
 
   const runCompare = async () => {
     if (!text.trim() || !textB.trim()) return Alert.alert("Both texts required", "Enter two passages.");
+    if (text.length > MAX_TEXT_CHARS || textB.length > MAX_TEXT_CHARS) {
+      return Alert.alert("Text too long", "Each passage must be under 20,000 characters.");
+    }
     setLoading(true);
     try {
       setSecondary(await compareTexts(text, textB));
@@ -146,11 +165,15 @@ export default function HomeScreen() {
             <Panel>
               <View style={styles.panelHeader}>
                 <SectionTitle title="Input text" detail="Paste a message, excuse, paragraph or article." />
-                <Pressable onPress={() => setText(DEMO)}><Text style={styles.actionText}>LOAD DEMO</Text></Pressable>
+                <View style={styles.panelActions}>
+                  <Pressable onPress={() => setText(DEMO)}><Text style={styles.actionText}>LOAD DEMO</Text></Pressable>
+                  <Pressable onPress={() => setText("")}><Text style={styles.actionText}>CLEAR</Text></Pressable>
+                </View>
               </View>
               <TextInput
                 value={text}
                 onChangeText={setText}
+                maxLength={MAX_TEXT_CHARS}
                 multiline
                 textAlignVertical="top"
                 placeholder="Paste text to analyze..."
@@ -158,8 +181,10 @@ export default function HomeScreen() {
                 style={styles.textArea}
               />
               <View style={styles.inputFooter}>
-                <Text style={styles.counter}>{text.length.toLocaleString()} characters</Text>
-                <Text style={styles.counter}>MAX 20K</Text>
+                <Text style={[styles.counter, text.length >= MAX_TEXT_CHARS && styles.counterLimit]}>
+                  {text.length.toLocaleString()} / 20,000 characters
+                </Text>
+                <Text style={styles.counter}>INPUT LIMIT</Text>
               </View>
             </Panel>
 
@@ -213,7 +238,10 @@ export default function HomeScreen() {
 
             {result ? (
               <View style={styles.resultsWrap}>
-                <SectionTitle title="Analysis results" detail="Predictions and linguistic measurements from the selected tools." />
+                <View style={styles.resultHeaderRow}>
+                  <SectionTitle title="Analysis results" detail="Predictions and linguistic measurements from the selected tools." />
+                  <Pressable onPress={shareResult}><Text style={styles.actionText}>SHARE JSON</Text></Pressable>
+                </View>
                 {resultCards.map(([key, value]: any) => (
                   <Panel key={key} style={styles.resultPanel}>
                     <Text style={styles.resultTitle}>{String(key).replaceAll("_", " ").toUpperCase()}</Text>
@@ -276,19 +304,55 @@ export default function HomeScreen() {
             <Panel>
               <SectionTitle title="Semantic comparison" detail="Compare meaning with sentence embeddings." />
               <Text style={styles.fieldLabel}>TEXT A</Text>
-              <TextInput value={text} onChangeText={setText} multiline textAlignVertical="top" style={styles.textArea} placeholderTextColor={colors.muted} />
+              <TextInput value={text} onChangeText={setText} maxLength={MAX_TEXT_CHARS} multiline textAlignVertical="top" style={styles.textArea} placeholderTextColor={colors.muted} />
               <Text style={styles.fieldLabel}>TEXT B</Text>
-              <TextInput value={textB} onChangeText={setTextB} multiline textAlignVertical="top" style={styles.textArea} placeholderTextColor={colors.muted} />
+              <TextInput value={textB} onChangeText={setTextB} maxLength={MAX_TEXT_CHARS} multiline textAlignVertical="top" style={styles.textArea} placeholderTextColor={colors.muted} />
               <Pressable onPress={runCompare} disabled={loading} style={styles.primaryButton}>
                 {loading ? <ActivityIndicator color={colors.bg} /> : <Activity size={18} color={colors.bg} />}
                 <Text style={styles.primaryButtonText}>Compare meaning</Text>
               </Pressable>
             </Panel>
-            {secondary ? <Panel style={{ marginTop: 14 }}>
-              <Text style={styles.resultTitle}>COSINE SIMILARITY</Text>
-              <Text style={styles.bigScore}>{secondary.similarity}</Text>
-              <Text style={styles.resultBody}>{secondary.interpretation}</Text>
-            </Panel> : null}
+            {secondary ? (
+              <View style={styles.comparisonResults}>
+                <Panel>
+                  <Text style={styles.resultTitle}>SEMANTIC SIMILARITY</Text>
+                  <View style={styles.predictionRow}>
+                    <Text style={styles.bigScore}>{secondary.similarity}</Text>
+                    <Text style={styles.scorePill}>{secondary.percentage}%</Text>
+                  </View>
+                  <Text style={styles.resultBody}>{secondary.similarity_label || "Cosine similarity"}</Text>
+                  <Text style={[styles.resultBody, { marginTop: 8 }]}>{secondary.interpretation}</Text>
+                </Panel>
+                <SectionTitle title="Text metrics" detail="A side-by-side comparison. Delta is Text B minus Text A." />
+                <View style={styles.metricGrid}>
+                  {[
+                    ["WORDS", "words"],
+                    ["SENTENCES", "sentences"],
+                    ["CHARACTERS", "characters"],
+                    ["READABILITY", "flesch_reading_ease"],
+                  ].map(([label, key]) => (
+                    <View key={key} style={styles.comparisonCell}>
+                      <Text style={styles.metricLabel}>{label}</Text>
+                      <View style={styles.comparisonLine}>
+                        <Text style={styles.comparisonSide}>A</Text>
+                        <Text style={styles.comparisonValue}>{secondary.stats_a?.[key] ?? "—"}</Text>
+                      </View>
+                      <View style={styles.comparisonLine}>
+                        <Text style={styles.comparisonSide}>B</Text>
+                        <Text style={styles.comparisonValue}>{secondary.stats_b?.[key] ?? "—"}</Text>
+                      </View>
+                      <View style={styles.comparisonLine}>
+                        <Text style={styles.comparisonSide}>Δ</Text>
+                        <Text style={styles.comparisonDelta}>
+                          {Number(secondary.differences_b_minus_a?.[key] ?? 0) > 0 ? "+" : ""}
+                          {secondary.differences_b_minus_a?.[key] ?? "—"}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ) : null}
           </>
         ) : null}
 
@@ -352,11 +416,14 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: colors.panel2 },
   tabText: { color: colors.muted, fontSize: 12, fontWeight: "600" },
   tabTextActive: { color: colors.text },
-  panelHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between" },
+  panelHeader: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
+  panelActions: { flexDirection: "row", gap: 12 },
+  resultHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   actionText: { color: colors.accent, fontSize: 9, fontWeight: "800", letterSpacing: 0.8, paddingTop: 4 },
   textArea: { minHeight: 140, color: colors.text, backgroundColor: "#0B0F16", borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, fontSize: 14, lineHeight: 21, marginTop: 4 },
   inputFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 9 },
   counter: { color: colors.muted, fontSize: 10 },
+  counterLimit: { color: colors.orange },
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   toolGrid: { flexDirection: "row", flexWrap: "wrap", gap: 9 },
   toolCard: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 15, padding: 11, width: "48.5%", minHeight: 78 },
@@ -376,6 +443,12 @@ const styles = StyleSheet.create({
   metricBox: { width: "48%", backgroundColor: colors.panel2, borderRadius: 12, padding: 12 },
   metricValue: { color: colors.accent, fontSize: 23, fontWeight: "800" },
   metricLabel: { color: colors.muted, fontSize: 9, letterSpacing: 0.8, marginTop: 5 },
+  comparisonResults: { gap: 12, marginTop: 14 },
+  comparisonCell: { width: "48%", backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 12, gap: 8 },
+  comparisonLine: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  comparisonSide: { color: colors.muted, fontSize: 10, fontWeight: "800" },
+  comparisonValue: { color: colors.text, fontSize: 12, fontWeight: "700" },
+  comparisonDelta: { color: colors.accent, fontSize: 12, fontWeight: "800" },
   predictionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
   predictionMain: { color: colors.text, fontSize: 20, fontWeight: "800" },
   scorePill: { color: colors.accent, fontSize: 10, fontWeight: "700", backgroundColor: "#1D2A18", borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6, overflow: "hidden" },
