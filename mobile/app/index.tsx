@@ -15,16 +15,16 @@ import { useAppTheme, type ThemeColors } from "@/theme/ThemeContext";
 
 const TOOLS: { id: Operation; title: string; desc: string; icon: any; tint: string }[] = [
   { id: "language", title: "Language ID", desc: "Detect language and alternatives", icon: Languages, tint: baseColors.orange },
-  { id: "stats", title: "Text metrics", desc: "Readability, vocabulary, sentence stats", icon: Gauge, tint: colors.accent },
-  { id: "sentiment", title: "Sentiment", desc: "Positive or negative tone", icon: Activity, tint: colors.blue },
-  { id: "emotion", title: "Emotion map", desc: "Rank emotional signals", icon: AudioLines, tint: colors.purple },
-  { id: "entities", title: "Named entities", desc: "People, places, dates, organisations", icon: Tags, tint: colors.orange },
-  { id: "keywords", title: "Keywords", desc: "Important terms and phrases", icon: TextSearch, tint: colors.accent },
-  { id: "pos", title: "Token & POS", desc: "Lemmas, grammar and dependencies", icon: Languages, tint: colors.blue },
-  { id: "summary", title: "Summarize", desc: "Compress long passages", icon: FileText, tint: colors.purple },
-  { id: "zero_shot", title: "Custom labels", desc: "Classify against your own labels", icon: WandSparkles, tint: colors.orange },
-  { id: "excuse", title: "Excuse cues", desc: "Hedging, explanations and commitments", icon: BrainCircuit, tint: colors.red },
-  { id: "syntax", title: "Syntax explorer", desc: "Sentence roots and dependency tree", icon: Sparkles, tint: colors.blue },
+  { id: "stats", title: "Text metrics", desc: "Readability, vocabulary, sentence stats", icon: Gauge, tint: baseColors.accent },
+  { id: "sentiment", title: "Sentiment", desc: "Positive or negative tone", icon: Activity, tint: baseColors.blue },
+  { id: "emotion", title: "Emotion map", desc: "Rank emotional signals", icon: AudioLines, tint: baseColors.purple },
+  { id: "entities", title: "Named entities", desc: "People, places, dates, organisations", icon: Tags, tint: baseColors.orange },
+  { id: "keywords", title: "Keywords", desc: "Important terms and phrases", icon: TextSearch, tint: baseColors.accent },
+  { id: "pos", title: "Token & POS", desc: "Lemmas, grammar and dependencies", icon: Languages, tint: baseColors.blue },
+  { id: "summary", title: "Summarize", desc: "Compress long passages", icon: FileText, tint: baseColors.purple },
+  { id: "zero_shot", title: "Custom labels", desc: "Classify against your own labels", icon: WandSparkles, tint: baseColors.orange },
+  { id: "excuse", title: "Excuse cues", desc: "Hedging, explanations and commitments", icon: BrainCircuit, tint: baseColors.red },
+  { id: "syntax", title: "Syntax explorer", desc: "Sentence roots and dependency tree", icon: Sparkles, tint: baseColors.blue },
 ];
 
 const DEMO = "I was going to submit the assignment yesterday, but my laptop stopped working right before the deadline. I contacted my teammate and promised to send the file this evening.";
@@ -156,6 +156,10 @@ export default function HomeScreen() {
             <View style={[styles.statusDot, { backgroundColor: online ? colors.green : colors.red }]} />
             <Text style={styles.statusText}>{online ? "API ONLINE" : "API OFFLINE"}</Text>
           </View>
+          <Pressable onPress={toggleTheme} accessibilityRole="button" accessibilityLabel={isDark ? "Switch to light theme" : "Switch to dark theme"} style={styles.themeToggle}>
+            <ThemeIcon size={17} color={colors.text} />
+            <Text style={styles.themeToggleText}>{isDark ? "LIGHT" : "DARK"}</Text>
+          </Pressable>
         </View>
 
         <View style={styles.hero}>
@@ -499,7 +503,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   entityChip: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel2, padding: 9, borderRadius: 10, gap: 4 },
   entityText: { color: colors.text, fontSize: 12, fontWeight: "700" },
   entityLabel: { color: colors.blue, fontSize: 9, textTransform: "uppercase", letterSpacing: 0.8 },
-  keywordChip: { backgroundColor: "#1D2A18", paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 },
+  keywordChip: { backgroundColor: colors.pill, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8 },
   keywordText: { color: colors.accent, fontSize: 11, fontWeight: "600" },
   emptyText: { color: colors.muted, fontSize: 12 },
   warningText: { color: colors.orange, fontSize: 11, lineHeight: 17, marginBottom: 10 },
@@ -509,7 +513,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   resultBody: { color: colors.text, fontSize: 13, lineHeight: 20 },
   jsonText: { color: colors.code, fontSize: 10, lineHeight: 15 },
   disclaimer: { color: colors.muted, fontSize: 10, lineHeight: 16, textAlign: "center", paddingHorizontal: 10 },
-  singleInput: { color: colors.text, backgroundColor: "#0B0F16", borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 13, fontSize: 13, marginTop: 4 },
+  singleInput: { color: colors.text, backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border, borderRadius: 12, padding: 13, fontSize: 13, marginTop: 4 },
   fieldLabel: { color: colors.muted, fontSize: 10, fontWeight: "800", letterSpacing: 1, marginTop: 10 },
   bigScore: { color: colors.accent, fontSize: 48, fontWeight: "800", marginBottom: 8 },
   bigScoreSmall: { color: colors.accent, fontSize: 30, fontWeight: "800" },
