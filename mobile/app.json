@@ -13,6 +13,10 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "splash": {
+      "backgroundColor": "#0B0D11",
+      "resizeMode": "contain"
     }
   }
 }
