@@ -54,6 +54,7 @@ export default function HomeScreen() {
   const [corpusQuery, setCorpusQuery] = useState("student excuses and missed deadlines");
   const [corpusResult, setCorpusResult] = useState<any>(null);
   const [toolSearch, setToolSearch] = useState("");
+  const [activePreset, setActivePreset] = useState("excuse");
 
   useEffect(() => {
     healthCheck().then(setOnline).catch(() => setOnline(false));
@@ -165,15 +166,12 @@ export default function HomeScreen() {
 
         <View style={[styles.hero, width >= 760 && styles.heroWide]}>
           <View style={styles.heroCopy}>
-            <Text style={styles.kicker}>A TOOLKIT FOR EVERYDAY WRITING</Text>
-            <Text style={[styles.headline, width < 480 && { fontSize: 35, lineHeight: 38 }]}>Make more sense{"\\n"}of your <Text style={styles.headlineAccent}>text.</Text></Text>
-            <Text style={styles.subtitle}>Explore tone, structure and meaning. Compare passages or search indexed examples — all in one focused workspace.</Text>
-            <View style={styles.heroMeta}>
-              <View style={styles.metaChip}><Text style={styles.metaChipText}>11 TEXT TOOLS</Text></View>
-              <View style={styles.metaChip}><Text style={styles.metaChipText}>ANALYZE · COMPARE · SEARCH</Text></View>
-            </View>
+            <Text style={styles.kicker}>LINGUISTIC DECEPTION & EXCUSE PLAUSIBILITY</Text>
+            <Text style={[styles.headline, width < 480 && { fontSize: 32, lineHeight: 35 }]}>Read the cues.{"\\n"}<Text style={styles.headlineAccent}>Not minds.</Text></Text>
+            <Text style={styles.subtitle}>Explore how explanations are worded — without pretending to detect lies.</Text>
+            <View style={styles.heroMeta}><View style={styles.metaChip}><Text style={styles.metaChipText}>LINGUISTIC CUES</Text></View><View style={styles.metaChip}><Text style={styles.metaChipText}>TEXT COMPARISON</Text></View></View>
           </View>
-          {width >= 760 ? <View style={styles.heroVisual}><OrbitScene dark={isDark} /><View style={styles.visualCaption}><Text style={styles.visualCaptionTitle}>WORDS HAVE LAYERS</Text><Text style={styles.visualCaptionText}>Structure · tone · context</Text></View></View> : null}
+          {width >= 760 ? <View style={styles.heroVisual}><OrbitScene dark={isDark} /><View style={styles.visualCaption}><Text style={styles.visualCaptionTitle}>LANGUAGE, IN CONTEXT</Text><Text style={styles.visualCaptionText}>Cues · structure · meaning</Text></View></View> : null}
         </View>
 
         <View style={styles.tabs}>
@@ -449,7 +447,25 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   status: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 99 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
-  hero: { paddingTop: 8, paddingBottom: 2 },
+  hero: { paddingTop: 2, paddingBottom: 0 },
+  focusSection: { gap: 9 },
+  caseSection: { gap: 9 },
+  focusHeading: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8 },
+  focusTitle: { color: colors.text, fontSize: 15, fontWeight: "800", letterSpacing: -0.3 },
+  focusHint: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 1.2 },
+  presetRow: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  presetCard: { flexGrow: 1, flexBasis: 180, minWidth: 0, padding: 12, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, borderRadius: 13, borderBottomWidth: 3, borderBottomColor: colors.border, gap: 7 },
+  presetCardActive: { backgroundColor: colors.selected, borderColor: colors.selectedBorder, borderBottomColor: colors.accent },
+  presetMark: { width: 34, height: 34, borderRadius: 10, backgroundColor: colors.panel2, alignItems: "center", justifyContent: "center" },
+  presetMarkActive: { backgroundColor: colors.accent },
+  presetTitle: { color: colors.text, fontSize: 12, fontWeight: "800" },
+  presetDetail: { color: colors.muted, fontSize: 10, lineHeight: 14 },
+  presetAction: { color: colors.muted, fontSize: 8, fontWeight: "800", letterSpacing: 0.8, marginTop: 2 },
+  presetActionActive: { color: colors.accent },
+  caseRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  caseChip: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, flexGrow: 1, flexBasis: 130, backgroundColor: colors.panel2, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11 },
+  caseChipTitle: { color: colors.text, fontSize: 11, fontWeight: "700" },
+  pressed: { transform: [{ translateY: 2 }], opacity: 0.88 },
   heroWide: { flexDirection: "row", alignItems: "center", gap: 22, minHeight: 250 },
   heroCopy: { flex: 1, minWidth: 0 },
   heroVisual: { width: "36%", minWidth: 220, maxWidth: 380, minHeight: 250, justifyContent: "center", alignItems: "center", borderRadius: 22, backgroundColor: colors.panel, borderWidth: 1, borderColor: colors.border, overflow: "hidden" },
