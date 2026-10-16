@@ -13,6 +13,6 @@ export function SectionTitle({ title, detail }: { title: string; detail?: string
 
 const styles = StyleSheet.create({
   wrap: { marginBottom: 12, gap: 4 },
-  title: { color: colors.text, fontSize: 18, fontWeight: "700" },
-  detail: { color: colors.muted, fontSize: 12, lineHeight: 18 },
+  title: { color: "#F2F3EF", fontSize: 18, fontWeight: "700" },
+  detail: { color: "#929BA7", fontSize: 12, lineHeight: 18 },
 });
