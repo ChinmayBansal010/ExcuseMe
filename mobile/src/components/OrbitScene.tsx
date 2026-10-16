@@ -1,74 +1,45 @@
 import { useEffect, useRef } from "react";
-import { Platform, View } from "react-native";
-
-declare global {
-  interface Window { THREE?: any }
-}
+import { Animated, Easing, Platform, View } from "react-native";
 
 export function OrbitScene({ dark }: { dark: boolean }) {
-  const host = useRef<any>(null);
+  const spin = useRef(new Animated.Value(0)).current;
+  const float = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (Platform.OS !== "web" || !host.current || !window.THREE) return;
-    const THREE = window.THREE;
-    const mount = host.current as HTMLElement;
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    camera.position.z = 5.2;
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.7));
-    renderer.setSize(mount.clientWidth || 300, mount.clientHeight || 240);
-    renderer.setClearColor(0x000000, 0);
-    mount.appendChild(renderer.domElement);
-
-    const group = new THREE.Group();
-    scene.add(group);
-    const core = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(1.02, 2),
-      new THREE.MeshStandardMaterial({ color: dark ? 0xc4e478 : 0x536d2c, roughness: 0.32, metalness: 0.12, flatShading: true })
-    );
-    group.add(core);
-    const ringMaterial = new THREE.MeshBasicMaterial({ color: dark ? 0x8fb7e8 : 0x315f9b, wireframe: true, transparent: true, opacity: 0.55 });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.45, 0.009, 8, 120), ringMaterial);
-    ring.rotation.set(0.85, 0.3, 0.4);
-    group.add(ring);
-    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(1.68, 0.006, 8, 120), new THREE.MeshBasicMaterial({ color: dark ? 0xc0a5e8 : 0x7450a4, transparent: true, opacity: 0.65 }));
-    ring2.rotation.set(1.3, 0.2, -0.6);
-    group.add(ring2);
-    scene.add(new THREE.HemisphereLight(0xffffff, dark ? 0x20291a : 0xe5edda, 2));
-    const key = new THREE.PointLight(0xffffff, 18);
-    key.position.set(3, 3, 4);
-    scene.add(key);
-    let frame = 0;
-    let active = true;
-    const draw = () => {
-      if (!active) return;
-      frame = requestAnimationFrame(draw);
-      group.rotation.y += 0.003;
-      group.rotation.x = Math.sin(Date.now() * 0.00025) * 0.08;
-      renderer.render(scene, camera);
-    };
-    draw();
-    const resize = () => {
-      if (!mount.clientWidth || !mount.clientHeight) return;
-      camera.aspect = mount.clientWidth / mount.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(mount.clientWidth, mount.clientHeight);
-    };
-    window.addEventListener("resize", resize);
-    return () => {
-      active = false;
-      cancelAnimationFrame(frame);
-      window.removeEventListener("resize", resize);
-      scene.traverse((item: any) => {
-        if (item.geometry) item.geometry.dispose();
-        if (item.material) (Array.isArray(item.material) ? item.material : [item.material]).forEach((material: any) => material.dispose());
-      });
-      renderer.dispose();
-      if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
-    };
-  }, [dark]);
+    const rotation = Animated.loop(Animated.timing(spin, { toValue: 1, duration: 18000, easing: Easing.linear, useNativeDriver: true }));
+    const bob = Animated.loop(Animated.sequence([
+      Animated.timing(float, { toValue: 1, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      Animated.timing(float, { toValue: 0, duration: 2200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+    ]));
+    rotation.start();
+    bob.start();
+    return () => { rotation.stop(); bob.stop(); };
+  }, [spin, float]);
 
   if (Platform.OS !== "web") return null;
-  return <View ref={host} style={{ width: "100%", height: 250, minWidth: 0, overflow: "hidden" }} />;
+
+  const rotateY = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+  const counterRotate = spin.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "-360deg"] });
+  const translateY = float.interpolate({ inputRange: [0, 1], outputRange: [5, -7] });
+  const lime = dark ? "#c4e478" : "#6f8f36";
+  const blue = dark ? "#8fb7e8" : "#315f9b";
+  const purple = dark ? "#c0a5e8" : "#7450a4";
+  const panel = dark ? "#171b20" : "#f1f3eb";
+
+  return (
+    <View style={{ width: "100%", height: 250, alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+      <Animated.View style={{ width: 210, height: 210, alignItems: "center", justifyContent: "center", transform: [{ translateY }, { perspective: 700 }, { rotateY }] }}>
+        <View style={{ position: "absolute", width: 190, height: 190, borderRadius: 95, borderWidth: 1.5, borderColor: blue, transform: [{ rotateX: "66deg" }, { rotateZ: "24deg" }] }} />
+        <Animated.View style={{ position: "absolute", width: 174, height: 174, borderRadius: 87, borderWidth: 1.5, borderColor: purple, transform: [{ rotateX: "68deg" }, { rotateY: counterRotate }, { rotateZ: "-32deg" }] }} />
+        <View style={{ position: "absolute", width: 144, height: 144, borderRadius: 72, borderWidth: 1, borderColor: blue, opacity: 0.45, transform: [{ rotateY: "68deg" }] }} />
+        <View style={{ width: 112, height: 112, borderRadius: 34, backgroundColor: lime, borderWidth: 1, borderColor: dark ? "#e4f7ae" : "#50682b", alignItems: "center", justifyContent: "center", transform: [{ rotateZ: "45deg" }], shadowColor: lime, shadowOffset: { width: 0, height: 8 }, shadowOpacity: dark ? 0.3 : 0.18, shadowRadius: 22, elevation: 12 }}>
+          <View style={{ width: 72, height: 72, borderRadius: 24, backgroundColor: panel, opacity: 0.88, transform: [{ rotateZ: "-12deg" }], alignItems: "center", justifyContent: "center" }}>
+            <View style={{ width: 30, height: 30, borderRadius: 15, backgroundColor: lime, opacity: 0.9 }} />
+          </View>
+        </View>
+        <View style={{ position: "absolute", width: 13, height: 13, borderRadius: 7, backgroundColor: purple, top: 20, right: 26, borderWidth: 2, borderColor: panel }} />
+        <View style={{ position: "absolute", width: 9, height: 9, borderRadius: 5, backgroundColor: blue, bottom: 25, left: 18, borderWidth: 1, borderColor: panel }} />
+      </Animated.View>
+    </View>
+  );
 }
