@@ -18,7 +18,7 @@ export async function analyzeText(text: string, operations: Operation[], labels:
 }
 
 export async function compareTexts(text_a: string, text_b: string) {
-  const response = await fetch(`${API_URL}/api/v1/similarity`, {
+  const response = await fetch(`${API_URL}/api/v1/compare`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text_a, text_b }),
