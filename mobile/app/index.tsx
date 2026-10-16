@@ -164,7 +164,7 @@ export default function HomeScreen() {
 
         <View style={styles.hero}>
           <Text style={styles.kicker}>THE TEXT WORKSPACE</Text>
-          <Text style={[styles.headline, width < 480 && { fontSize: 37, lineHeight: 40 }]}>Read between{"\n"}the <Text style={styles.headlineAccent}>lines.</Text></Text>
+          <Text style={[styles.headline, width < 480 && { fontSize: 37, lineHeight: 40 }]}>A closer look{"\n"}at your <Text style={styles.headlineAccent}>text.</Text></Text>
           <Text style={styles.subtitle}>Explore tone, structure, key phrases and meaning. Compare passages or search indexed examples when you need more context.</Text>
           <View style={styles.heroMeta}>
             <View style={styles.metaChip}><Text style={styles.metaChipText}>11 NLP TOOLS</Text></View>
