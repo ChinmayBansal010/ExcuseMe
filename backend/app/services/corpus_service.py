@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import torch
 from sentence_transformers import SentenceTransformer
 
 from app.core.config import DATABASE_PATH, EMBEDDING_MODEL
@@ -43,7 +44,7 @@ class CorpusService:
         if self._model is None:
             with self._model_lock:
                 if self._model is None:
-                    self._model = SentenceTransformer(EMBEDDING_MODEL)
+                    self._model = SentenceTransformer(EMBEDDING_MODEL, device='cuda' if torch.cuda.is_available() else 'cpu')
         return self._model
 
     def add_passages(self, passages: list[dict[str, str]], batch_size: int = 64) -> int:
