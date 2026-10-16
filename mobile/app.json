@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "ExcuseMe",
-    "slug": "excuseme",
-    "scheme": "excuseme",
+    "name": "ExcuseMoi",
+    "slug": "excuse-moi",
+    "scheme": "excusemoi",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
