@@ -174,7 +174,7 @@ export default function HomeScreen() {
         <View style={[styles.hero, width >= 760 && styles.heroWide]}>
           <View style={styles.heroCopy}>
             <Text style={styles.kicker}>LINGUISTIC DECEPTION & EXCUSE PLAUSIBILITY</Text>
-            <Text style={[styles.headline, width < 480 && { fontSize: 32, lineHeight: 35 }]}>Read the cues.{"\\n"}<Text style={styles.headlineAccent}>Not minds.</Text></Text>
+            <Text style={[styles.headline, width < 480 && { fontSize: 32, lineHeight: 35 }]}>Read the cues.{"\n"}<Text style={styles.headlineAccent}>Not minds.</Text></Text>
             <Text style={styles.subtitle}>Explore how explanations are worded — without pretending to detect lies.</Text>
             <View style={styles.heroMeta}><View style={styles.metaChip}><Text style={styles.metaChipText}>LINGUISTIC CUES</Text></View><View style={styles.metaChip}><Text style={styles.metaChipText}>TEXT COMPARISON</Text></View></View>
           </View>
