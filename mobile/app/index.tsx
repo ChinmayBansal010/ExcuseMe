@@ -150,7 +150,7 @@ export default function HomeScreen() {
           <View style={styles.brandMark}><Sparkles size={21} color={colors.bg} /></View>
           <View style={{ flex: 1 }}>
             <Text style={styles.brand}>ExcuseMe<Text style={styles.dot}>.</Text></Text>
-            <Text style={styles.eyebrow}>LINGUISTIC INTELLIGENCE LAB</Text>
+            <Text style={styles.eyebrow}>TEXT TOOLS / WORKSPACE</Text>
           </View>
           <View style={[styles.status, { borderColor: online ? "#3A5330" : colors.border }]}>
             <View style={[styles.statusDot, { backgroundColor: online ? colors.green : colors.red }]} />
@@ -163,12 +163,12 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.hero}>
-          <Text style={styles.kicker}>TEXT, DECODED.</Text>
+          <Text style={styles.kicker}>THE TEXT WORKSPACE</Text>
           <Text style={[styles.headline, width < 480 && { fontSize: 37, lineHeight: 40 }]}>Read between{"\n"}the <Text style={styles.headlineAccent}>lines.</Text></Text>
-          <Text style={styles.subtitle}>A multi-tool NLP workbench for language, meaning, emotion and intent cues.</Text>
+          <Text style={styles.subtitle}>Explore tone, structure, key phrases and meaning. Compare passages or search indexed examples when you need more context.</Text>
           <View style={styles.heroMeta}>
             <View style={styles.metaChip}><Text style={styles.metaChipText}>11 NLP TOOLS</Text></View>
-            <View style={styles.metaChip}><Text style={styles.metaChipText}>TRANSFORMERS + LINGUISTICS</Text></View>
+            <View style={styles.metaChip}><Text style={styles.metaChipText}>ANALYZE · COMPARE · SEARCH</Text></View>
           </View>
         </View>
 
