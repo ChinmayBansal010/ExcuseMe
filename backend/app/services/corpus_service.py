@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ class CorpusService:
         self.db_path = Path(DATABASE_PATH)
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._model = None
+        self._model_lock = threading.Lock()
         self._initialize()
 
     def _connect(self):
@@ -39,7 +41,9 @@ class CorpusService:
 
     def _get_model(self):
         if self._model is None:
-            self._model = SentenceTransformer(EMBEDDING_MODEL)
+            with self._model_lock:
+                if self._model is None:
+                    self._model = SentenceTransformer(EMBEDDING_MODEL)
         return self._model
 
     def add_passages(self, passages: list[dict[str, str]], batch_size: int = 64) -> int:
@@ -77,17 +81,35 @@ class CorpusService:
                 "message": "The local corpus index is empty. Run scripts/index_fineweb.py first.",
                 "indexed_passages": 0,
             }
-        results = []
+        valid_rows = []
+        vectors = []
         for row_id, source_id, text, blob, dimension in rows:
             vector = np.frombuffer(blob, dtype=np.float32)
             if dimension != query_embedding.shape[0] or vector.shape[0] != query_embedding.shape[0]:
                 continue
-            score = float(np.dot(query_embedding, vector))
-            results.append(
-                {"id": row_id, "source_id": source_id, "text": text, "similarity": round(score, 4)}
-            )
-        results.sort(key=lambda item: item["similarity"], reverse=True)
-        return {"results": results[:top_k], "indexed_passages": len(rows), "model": EMBEDDING_MODEL}
+            valid_rows.append((row_id, source_id, text))
+            vectors.append(vector)
+
+        if not vectors:
+            return {
+                "results": [],
+                "message": "No indexed passages match the configured embedding dimension.",
+                "indexed_passages": len(rows),
+                "model": EMBEDDING_MODEL,
+            }
+
+        scores = np.vstack(vectors) @ query_embedding
+        top_indices = np.argsort(scores)[::-1][:top_k]
+        results = [
+            {
+                "id": valid_rows[index][0],
+                "source_id": valid_rows[index][1],
+                "text": valid_rows[index][2],
+                "similarity": round(float(scores[index]), 4),
+            }
+            for index in top_indices
+        ]
+        return {"results": results, "indexed_passages": len(rows), "model": EMBEDDING_MODEL}
 
 
 corpus_service = CorpusService()
