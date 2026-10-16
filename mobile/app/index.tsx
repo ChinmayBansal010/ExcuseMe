@@ -70,7 +70,7 @@ export default function HomeScreen() {
     if (!result) return;
     try {
       await Share.share({
-        title: "ExcuseMe analysis",
+        title: "ExcuseMoi analysis",
         message: JSON.stringify({ text, results: result.results, warnings: result.warnings }, null, 2),
       });
     } catch (error: any) {
@@ -135,22 +135,22 @@ export default function HomeScreen() {
     return (
       <SafeAreaView style={styles.splash}>
         <View style={styles.splashBrandMark}><Sparkles size={28} color={colors.bg} /></View>
-        <Text style={styles.splashBrand}>ExcuseMe<Text style={styles.dot}>.</Text></Text>
+        <Text style={styles.splashBrand}>ExcuseMoi<Text style={styles.dot}>.</Text></Text>
         <Text style={styles.splashTagline}>Language, intent, context.</Text>
         <View style={styles.splashTrack}><View style={styles.splashProgress} /></View>
-        <Text style={styles.splashCaption}>TEXT ANALYSIS WORKBENCH</Text>
+        <Text style={styles.splashCaption}>EXCUSEMOI · TEXT STUDIO</Text>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width < 480 ? 14 : 24 }]} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={[styles.page, { paddingHorizontal: width < 480 ? 12 : width < 900 ? 20 : 28 }]} keyboardShouldPersistTaps="handled">
         <View style={styles.topbar}>
           <View style={styles.brandMark}><Sparkles size={21} color={colors.bg} /></View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.brand}>ExcuseMe<Text style={styles.dot}>.</Text></Text>
-            <Text style={styles.eyebrow}>TEXT TOOLS / WORKSPACE</Text>
+            <Text style={styles.brand}>ExcuseMoi<Text style={styles.dot}>.</Text></Text>
+            <Text style={styles.eyebrow}>YOUR TEXT, UNDERSTOOD</Text>
           </View>
           <View style={[styles.status, { borderColor: online ? "#3A5330" : colors.border }]}>
             <View style={[styles.statusDot, { backgroundColor: online ? colors.green : colors.red }]} />
@@ -167,7 +167,7 @@ export default function HomeScreen() {
           <Text style={[styles.headline, width < 480 && { fontSize: 37, lineHeight: 40 }]}>A closer look{"\n"}at your <Text style={styles.headlineAccent}>text.</Text></Text>
           <Text style={styles.subtitle}>Explore tone, structure, key phrases and meaning. Compare passages or search indexed examples when you need more context.</Text>
           <View style={styles.heroMeta}>
-            <View style={styles.metaChip}><Text style={styles.metaChipText}>11 NLP TOOLS</Text></View>
+            <View style={styles.metaChip}><Text style={styles.metaChipText}>11 TEXT TOOLS</Text></View>
             <View style={styles.metaChip}><Text style={styles.metaChipText}>ANALYZE · COMPARE · SEARCH</Text></View>
           </View>
         </View>
@@ -244,7 +244,7 @@ export default function HomeScreen() {
                 const active = selected.includes(tool.id);
                 const Icon = tool.icon;
                 return (
-                  <Pressable key={tool.id} onPress={() => toggle(tool.id)} style={[styles.toolCard, { width: width < 560 ? "100%" : width < 900 ? "48.5%" : "31%" }, active && styles.toolCardActive]}>
+                  <Pressable key={tool.id} onPress={() => toggle(tool.id)} style={[styles.toolCard, { width: width < 560 ? "100%" : width < 900 ? "48%" : "32%" }, active && styles.toolCardActive]}>
                     <View style={[styles.toolIcon, { backgroundColor: `${tool.tint}18` }]}><Icon size={19} color={tool.tint} /></View>
                     <View style={styles.toolInfo}>
                       <Text style={styles.toolTitle}>{tool.title}</Text>
@@ -416,7 +416,7 @@ export default function HomeScreen() {
 
         <View style={styles.footer}>
           <View style={styles.footerLine} />
-          <Text style={styles.footerTitle}>EXCUSEME / NLP WORKBENCH</Text>
+          <Text style={styles.footerTitle}>EXCUSEMOI / TEXT STUDIO</Text>
           <Text style={styles.footerText}>Built with FastAPI · spaCy · Transformers · Sentence Transformers · Expo</Text>
           <Text style={styles.footerText}>Language analysis, not a lie detector.</Text>
         </View>
@@ -436,7 +436,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   splashCaption: { color: colors.muted, fontSize: 9, fontWeight: "700", letterSpacing: 2, marginTop: 17 },
   themeToggle: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, paddingHorizontal: 10, paddingVertical: 9, borderRadius: 99 },
   themeToggleText: { color: colors.text, fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
-  page: { padding: 20, paddingBottom: 50, gap: 18, maxWidth: 900, width: "100%", alignSelf: "center" },
+  page: { padding: 14, paddingBottom: 32, gap: 14, maxWidth: 1320, width: "100%", alignSelf: "center" },
   topbar: { flexDirection: "row", alignItems: "center", gap: 11, marginTop: 8 },
   brandMark: { width: 42, height: 42, borderRadius: 14, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" },
   brand: { color: colors.text, fontSize: 22, fontWeight: "800", letterSpacing: -0.7 },
@@ -445,11 +445,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   status: { flexDirection: "row", alignItems: "center", gap: 6, borderWidth: 1, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 99 },
   statusDot: { width: 6, height: 6, borderRadius: 3 },
   statusText: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 0.6 },
-  hero: { paddingTop: 22, paddingBottom: 8 },
+  hero: { paddingTop: 10, paddingBottom: 2 },
   kicker: { color: colors.accent, fontSize: 10, fontWeight: "800", letterSpacing: 2.5, marginBottom: 9 },
-  headline: { color: colors.text, fontSize: 43, lineHeight: 46, fontWeight: "800", letterSpacing: -1.8 },
+  headline: { color: colors.text, fontSize: 42, lineHeight: 44, fontWeight: "800", letterSpacing: -1.8 },
   headlineAccent: { color: colors.accent },
-  subtitle: { color: colors.muted, fontSize: 14, lineHeight: 21, maxWidth: 520, marginTop: 12 },
+  subtitle: { color: colors.muted, fontSize: 14, lineHeight: 21, maxWidth: 680, marginTop: 10 },
   heroMeta: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 16 },
   metaChip: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 6 },
   metaChipText: { color: colors.muted, fontSize: 9, fontWeight: "700", letterSpacing: 0.8 },
@@ -462,7 +462,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   panelActions: { flexDirection: "row", gap: 12 },
   resultHeaderRow: { flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 },
   actionText: { color: colors.accent, fontSize: 9, fontWeight: "800", letterSpacing: 0.8, paddingTop: 4 },
-  textArea: { minHeight: 140, color: colors.text, backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, fontSize: 14, lineHeight: 21, marginTop: 4 },
+  textArea: { minHeight: 112, color: colors.text, backgroundColor: colors.input, borderWidth: 1, borderColor: colors.border, borderRadius: 13, padding: 13, fontSize: 14, lineHeight: 21, marginTop: 4 },
   inputFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 9 },
   counter: { color: colors.muted, fontSize: 10 },
   counterLimit: { color: colors.orange },
@@ -518,7 +518,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   bigScore: { color: colors.accent, fontSize: 48, fontWeight: "800", marginBottom: 8 },
   bigScoreSmall: { color: colors.accent, fontSize: 30, fontWeight: "800" },
   scoreHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 },
-  footer: { alignItems: "center", gap: 7, paddingTop: 12 },
+  footer: { alignItems: "center", gap: 6, paddingTop: 8 },
   footerLine: { height: 1, backgroundColor: colors.border, width: "100%", marginBottom: 8 },
   footerTitle: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 2 },
   footerText: { color: colors.muted, fontSize: 10, textAlign: "center" },
