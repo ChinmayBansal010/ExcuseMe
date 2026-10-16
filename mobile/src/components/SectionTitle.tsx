@@ -1,11 +1,12 @@
 import { StyleSheet, Text, View } from "react-native";
-import { colors } from "@/theme/colors";
+import { useAppTheme } from "@/theme/ThemeContext";
 
 export function SectionTitle({ title, detail }: { title: string; detail?: string }) {
+  const { colors } = useAppTheme();
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>{title}</Text>
-      {detail ? <Text style={styles.detail}>{detail}</Text> : null}
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      {detail ? <Text style={[styles.detail, { color: colors.muted }]}>{detail}</Text> : null}
     </View>
   );
 }
