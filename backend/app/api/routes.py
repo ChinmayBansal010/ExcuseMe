@@ -1,9 +1,14 @@
+import logging
+
+import numpy as np
 from fastapi import APIRouter, HTTPException
 
+from app.core.config import EMBEDDING_MODEL
 from app.schemas.analysis import AnalyzeRequest, SimilarityRequest, CorpusSearchRequest
 from app.services.nlp_service import nlp_service
 from app.services.corpus_service import corpus_service
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["NLP"])
 
 TOOLS = [
@@ -18,13 +23,15 @@ TOOLS = [
     {"id": "zero_shot", "name": "Custom classification", "description": "Classifies text against labels supplied by the user.", "category": "classification"},
     {"id": "summary", "name": "Summarization", "description": "Produces a concise summary for longer passages.", "category": "generation"},
     {"id": "excuse", "name": "Excuse language cues", "description": "Surfaces hedging, explanations, time references, apologies and commitments without claiming to detect lies.", "category": "excuse"},
-    {"id": "similarity", "name": "Semantic similarity", "description": "Compares the meaning of two text passages.", "category": "embeddings"},
+    {"id": "similarity", "name": "Semantic comparison", "description": "Compares meaning and measurable text differences between two passages.", "category": "embeddings"},
     {"id": "search", "name": "Corpus search", "description": "Retrieves semantically related passages from the optional local corpus index.", "category": "retrieval"},
 ]
+
 
 @router.get("/tools")
 def get_tools():
     return {"tools": TOOLS}
+
 
 @router.post("/analyze")
 def analyze(request: AnalyzeRequest):
@@ -33,7 +40,11 @@ def analyze(request: AnalyzeRequest):
     except (ValueError, RuntimeError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"NLP operation failed: {type(exc).__name__}: {exc}") from exc
+        logger.exception("NLP analysis failed")
+        raise HTTPException(
+            status_code=500,
+            detail="Analysis failed while processing this request. Check the backend logs for details.",
+        ) from exc
 
     return {
         "text_length": len(request.text),
@@ -44,12 +55,10 @@ def analyze(request: AnalyzeRequest):
         ],
     }
 
+
 @router.post("/similarity")
 def similarity(request: SimilarityRequest):
     try:
-        from sentence_transformers import SentenceTransformer
-        import numpy as np
-        from app.core.config import EMBEDDING_MODEL
         model = corpus_service._get_model()
         embeddings = model.encode(
             [request.text_a, request.text_b],
@@ -61,14 +70,64 @@ def similarity(request: SimilarityRequest):
             "similarity": round(score, 4),
             "percentage": round(max(0.0, min(1.0, score)) * 100, 2),
             "model": EMBEDDING_MODEL,
-            "interpretation": "Cosine similarity between text embeddings; not a probability that the texts mean the same thing.",
+            "interpretation": (
+                "Cosine similarity between text embeddings; it is not a probability "
+                "that the texts mean the same thing."
+            ),
         }
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Similarity failed: {type(exc).__name__}: {exc}") from exc
+        logger.exception("Semantic similarity failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Semantic comparison is temporarily unavailable. Check model availability and backend logs.",
+        ) from exc
+
+
+@router.post("/compare")
+def compare(request: SimilarityRequest):
+    semantic = similarity(request)
+    try:
+        stats_a = nlp_service.stats(request.text_a)
+        stats_b = nlp_service.stats(request.text_b)
+    except (ValueError, RuntimeError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.exception("Text comparison metrics failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Text metrics are temporarily unavailable. Check the backend logs for details.",
+        ) from exc
+
+    score = semantic["similarity"]
+    label = (
+        "High semantic similarity" if score >= 0.75
+        else "Moderate semantic similarity" if score >= 0.45
+        else "Low semantic similarity"
+    )
+    fields = ("characters", "words", "sentences", "paragraphs", "flesch_reading_ease")
+    return {
+        **semantic,
+        "similarity_label": label,
+        "stats_a": {key: stats_a[key] for key in fields},
+        "stats_b": {key: stats_b[key] for key in fields},
+        "differences_b_minus_a": {
+            key: round(stats_b[key] - stats_a[key], 2)
+            for key in fields
+        },
+        "interpretation": (
+            semantic["interpretation"]
+            + " Text metric differences are descriptive and do not imply quality or intent."
+        ),
+    }
+
 
 @router.post("/search-corpus")
 def search_corpus(request: CorpusSearchRequest):
     try:
         return corpus_service.search(request.query, request.top_k)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Corpus search failed: {type(exc).__name__}: {exc}") from exc
+        logger.exception("Corpus search failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Corpus search is temporarily unavailable. Ensure the corpus index and embedding model are available.",
+        ) from exc
