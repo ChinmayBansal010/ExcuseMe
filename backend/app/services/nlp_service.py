@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 import spacy
+import torch
 import textstat
 from sklearn.feature_extraction.text import TfidfVectorizer
 from transformers import pipeline
@@ -39,10 +40,21 @@ class NLPService:
                     ) from exc
             return self._nlp
 
+    @staticmethod
+    def device() -> int:
+        """Use CUDA GPU 0 when available, otherwise use CPU."""
+        return 0 if torch.cuda.is_available() else -1
+
+    @staticmethod
+    def device_name() -> str:
+        if torch.cuda.is_available():
+            return f"cuda:0 ({torch.cuda.get_device_name(0)})"
+        return "cpu"
+
     def _get_pipeline(self, key: str, task: str, model: str):
         with self._lock:
             if key not in self._pipelines:
-                self._pipelines[key] = pipeline(task, model=model)
+                self._pipelines[key] = pipeline(task, model=model, device=self.device())
             return self._pipelines[key]
 
     @staticmethod
