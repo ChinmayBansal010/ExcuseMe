@@ -132,6 +132,13 @@ export default function HomeScreen() {
 
   const resultCards = useMemo(() => result?.results ? Object.entries(result.results) : [], [result]);
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const applyPreset = (preset: "excuse" | "profile" | "emotion") => {
+    setActivePreset(preset);
+    const presets: Record<string, Operation[]> = { excuse: ["stats", "excuse", "keywords"], profile: ["language", "stats", "pos", "syntax", "entities", "keywords"], emotion: ["sentiment", "emotion", "stats", "excuse"] };
+    setSelected(presets[preset]);
+    setTab("analyze");
+  };
+  const loadCase = (value: string) => { setText(value); setResult(null); setTab("analyze"); };
 
   if (splashVisible) {
     return (
@@ -186,11 +193,36 @@ export default function HomeScreen() {
           ))}
         </View>
 
+        <View style={styles.focusSection}>
+          <View style={styles.focusHeading}><Text style={styles.focusTitle}>Start with a focus</Text><Text style={styles.focusHint}>PICK A LENS</Text></View>
+          <View style={styles.presetRow}>
+            {([["excuse", "Excuse cues", "Explanation · hedge · promise"], ["profile", "Language profile", "Syntax · entities · structure"], ["emotion", "Tone & emotion", "Sentiment · emotional signals"]] as const).map(([key, title, detail]) => (
+              <Pressable key={key} onPress={() => applyPreset(key)} style={({ pressed }) => [styles.presetCard, activePreset === key && styles.presetCardActive, pressed && styles.pressed]}>
+                <View style={[styles.presetMark, activePreset === key && styles.presetMarkActive]}>
+                  {key === "excuse" ? <BrainCircuit size={18} color={activePreset === key ? colors.bg : colors.red} /> : key === "profile" ? <TextSearch size={18} color={activePreset === key ? colors.bg : colors.blue} /> : <AudioLines size={18} color={activePreset === key ? colors.bg : colors.purple} />}
+                </View>
+                <Text style={styles.presetTitle}>{title}</Text>
+                {width >= 600 ? <Text style={styles.presetDetail}>{detail}</Text> : null}
+                <Text style={[styles.presetAction, activePreset === key && styles.presetActionActive]}>{activePreset === key ? "SELECTED" : "USE FOCUS  ↗"}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+        <View style={styles.caseSection}>
+          <View style={styles.focusHeading}><Text style={styles.focusTitle}>Try a case</Text><Text style={styles.focusHint}>SAMPLE TEXT</Text></View>
+          <View style={styles.caseRow}>
+            {([["Deadline", "My laptop failed just before the deadline, so I asked my teammate to send the file later."], ["Missed meeting", "I lost track of time and missed the meeting. I should have messaged earlier."], ["Changed plans", "Something came up at home, and I will not be able to make it today. Can we reschedule?"]] as const).map(([title, sample]) => (
+              <Pressable key={title} onPress={() => loadCase(sample)} style={({ pressed }) => [styles.caseChip, pressed && styles.pressed]}>
+                <Text style={styles.caseChipTitle}>{title}</Text><ChevronRight size={14} color={colors.accent} />
+              </Pressable>
+            ))}
+          </View>
+        </View>
         {tab === "analyze" ? (
           <>
             <Panel>
               <View style={styles.panelHeader}>
-                <SectionTitle title="Input text" detail="Paste a message, excuse, paragraph or article." />
+                <SectionTitle title="Examine an explanation" detail="Paste text or load a case above." />
                 <View style={styles.panelActions}>
                   <Pressable onPress={() => setText(DEMO)}><Text style={styles.actionText}>LOAD DEMO</Text></Pressable>
                   <Pressable onPress={() => setText("")}><Text style={styles.actionText}>CLEAR</Text></Pressable>
