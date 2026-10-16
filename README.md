@@ -49,6 +49,51 @@ Dataset: https://huggingface.co/datasets/HuggingFaceFW/fineweb
 
 Important: FineWeb is general web text, not a labelled deception corpus. It is used for semantic retrieval/context examples, not as labels for honesty/deception. If you need a supervised credibility model, it requires task-appropriate labelled data and a separate evaluation.
 
+## GPU acceleration and cross-platform setup
+
+Transformer inference and semantic embeddings automatically use the first NVIDIA CUDA GPU when PyTorch detects one; otherwise they safely fall back to CPU. The API reports the selected device in transformer-operation results. spaCy parsing and TF-IDF/statistics operations are CPU-based; GPU acceleration applies to the Transformer and Sentence Transformer models.
+
+### NVIDIA GPU setup (Windows or Fedora Linux)
+
+1. Install a current NVIDIA driver for your operating system and reboot if required.
+2. Create and activate the backend virtual environment, then install a CUDA-enabled PyTorch build **before** installing the remaining requirements.
+
+Windows PowerShell, from the repository root:
+
+```powershell
+py -3.11 -m venv backend/.venv
+.\backend\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+python -m pip install -r backend/requirements.txt
+python -m spacy download en_core_web_sm
+```
+
+Fedora Linux, from the repository root:
+
+```bash
+python3.11 -m venv backend/.venv
+source backend/.venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+python -m pip install -r backend/requirements.txt
+python -m spacy download en_core_web_sm
+```
+
+Verify GPU access in the same activated environment:
+
+```bash
+python -c "import torch; print('PyTorch:', torch.__version__); print('CUDA available:', torch.cuda.is_available()); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU fallback')"
+```
+
+If `CUDA available` is `False`, check the NVIDIA driver, Python environment, and installed PyTorch build. Do not install the full CUDA Toolkit solely for PyTorch pip wheels; install it only if another workflow specifically requires it. CUDA support requires a compatible NVIDIA GPU and driver. AMD GPUs and systems without a supported CUDA device use CPU automatically.
+
+For CPU-only machines, skip the CUDA PyTorch command and install the regular requirements. The application remains usable, but transformer inference can be slower.
+
+### Fedora Linux notes
+
+Install Python 3.11, Node.js LTS, and Git using Fedora's package manager or approved repositories. Keep the backend virtual environment separate from the Expo frontend's Node dependencies. If Fedora's system Python is externally managed, always install Python packages inside the virtual environment rather than using system-wide pip.
+
 ## Windows setup
 
 ### 1. Backend
