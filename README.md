@@ -275,6 +275,7 @@ Base URL for local development: `http://127.0.0.1:8000`.
 | GET | `/` | API information |
 | GET | `/health` | Health check |
 | GET | `/api/v1/tools` | List supported tools |
+| GET | `/api/v1/diagnostics` | Report PyTorch, CUDA/GPU availability, and corpus database status |
 | POST | `/api/v1/analyze` | Run one or more NLP operations |
 | POST | `/api/v1/similarity` | Semantic similarity for two passages |
 | POST | `/api/v1/compare` | Similarity and text-metric differences |
