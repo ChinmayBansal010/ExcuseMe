@@ -13,19 +13,13 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["NLP"])
 
 TOOLS = [
-    {"id": "language", "name": "Language detection", "description": "Identifies likely language and alternative language probabilities.", "category": "linguistics"},
-    {"id": "stats", "name": "Text metrics", "description": "Word counts, sentence segmentation, vocabulary ratio and readability.", "category": "linguistics"},
-    {"id": "pos", "name": "Tokenization & POS", "description": "Tokens, lemmas, part-of-speech tags, stopwords and dependencies.", "category": "linguistics"},
-    {"id": "syntax", "name": "Syntax explorer", "description": "Sentence roots, dependency relations and parse structure.", "category": "linguistics"},
-    {"id": "entities", "name": "Named entities", "description": "People, organizations, locations, dates and other entity spans.", "category": "extraction"},
-    {"id": "keywords", "name": "Keyword extraction", "description": "Ranks salient terms and phrases using TF-IDF and frequency.", "category": "extraction"},
-    {"id": "sentiment", "name": "Sentiment", "description": "Predicts broad positive/negative sentiment.", "category": "classification"},
-    {"id": "emotion", "name": "Emotion", "description": "Ranks emotion labels using a pretrained text classifier.", "category": "classification"},
-    {"id": "zero_shot", "name": "Custom classification", "description": "Classifies text against labels supplied by the user.", "category": "classification"},
-    {"id": "summary", "name": "Summarization", "description": "Produces a concise summary for longer passages.", "category": "generation"},
-    {"id": "excuse", "name": "Excuse language cues", "description": "Surfaces hedging, explanations, time references, apologies and commitments without claiming to detect lies.", "category": "excuse"},
-    {"id": "similarity", "name": "Semantic comparison", "description": "Compares meaning and measurable text differences between two passages.", "category": "embeddings"},
-    {"id": "search", "name": "Corpus search", "description": "Retrieves semantically related passages from the optional local corpus index.", "category": "retrieval"},
+    {"id": "language", "name": "Language detection", "description": "Identifies the language of a message.", "category": "understanding"},
+    {"id": "sentiment", "name": "Tone", "description": "Estimates whether wording sounds positive or negative.", "category": "understanding"},
+    {"id": "emotion", "name": "Emotion", "description": "Highlights possible emotional tone in a message.", "category": "understanding"},
+    {"id": "summary", "name": "Summarize", "description": "Creates a shorter version of longer text.", "category": "writing"},
+    {"id": "excuse", "name": "Explanation quality", "description": "AI feedback on clarity, specificity, completeness and possible internal consistency, with text evidence.", "category": "writing"},
+    {"id": "similarity", "name": "Compare explanations", "description": "Compares the meaning of two passages.", "category": "writing"},
+
 ]
 
 
