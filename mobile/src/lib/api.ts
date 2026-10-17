@@ -23,12 +23,28 @@ async function readResponse(response: Response) {
 }
 
 async function postJson(path: string, body: Record<string, unknown>) {
-  const response = await fetch(`${API_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  return readResponse(response);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120_000);
+
+  try {
+    const response = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+    return await readResponse(response);
+  } catch (error: any) {
+    if (error?.name === "AbortError") {
+      throw new Error("The request took too long. The first model run may need more time; check that the backend is running and try again.");
+    }
+    if (error instanceof TypeError) {
+      throw new Error(`Cannot reach the ExcuseMoi API at ${API_URL}. Check the backend URL, network connection, and CORS configuration.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export async function analyzeText(text: string, operations: Operation[], labels: string[] = []) {
