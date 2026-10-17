@@ -1,8 +1,7 @@
 const API_URL = (process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8000").replace(/\/$/, "");
 
 export type Operation =
-  | "stats" | "sentiment" | "emotion" | "entities" | "keywords"
-  | "summary" | "excuse" | "language";
+  | "sentiment" | "emotion" | "summary" | "excuse" | "language";
 
 async function readResponse(response: Response) {
   let payload: any;
