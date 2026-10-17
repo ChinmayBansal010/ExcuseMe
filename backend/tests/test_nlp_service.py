@@ -61,3 +61,36 @@ def test_zero_shot_aggregates_custom_labels_across_chunks(monkeypatch):
     assert result["chunks_analyzed"] >= 2
     assert {item["label"] for item in result["predictions"]} == {"apology", "promise"}
     assert all(0 <= item["score"] <= 1 for item in result["predictions"])
+
+
+
+def test_text_chunks_split_on_sentence_boundaries():
+    chunks = NLPService._text_chunks("First sentence. Second sentence! Third sentence?")
+    assert chunks == ["First sentence. Second sentence! Third sentence?"]
+
+
+def test_text_chunks_preserve_whitespace_separated_sentences():
+    text = " ".join(f"Sentence number {i} has several words." for i in range(1, 90))
+    chunks = NLPService._text_chunks(text, max_words=30)
+    assert len(chunks) > 1
+    assert "Sentence number 89" in " ".join(chunks)
+
+
+class FakeSummaryPipeline:
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, text, **kwargs):
+        self.calls.append(text)
+        return [{"summary_text": "Summary of " + text.split(".")[0][:40]}]
+
+
+def test_summary_processes_long_text_in_multiple_chunks(monkeypatch):
+    service = NLPService()
+    fake = FakeSummaryPipeline()
+    monkeypatch.setattr(service, "_get_pipeline", lambda *args, **kwargs: fake)
+    text = " ".join(f"Sentence number {i} contains details about the event." for i in range(1, 100))
+    result = service.summary(text)
+    assert result["chunks_summarized"] > 1
+    assert len(fake.calls) >= result["chunks_summarized"]
+    assert result["summary"]
