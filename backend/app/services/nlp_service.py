@@ -118,10 +118,11 @@ class NLPService:
         total_weight = 0
         for chunk in chunks:
             weight = max(1, len(chunk.split()))
-            output = model(chunk, truncation=True, max_length=512)[0]
-            label = str(output["label"])
-            score = float(output["score"])
-            totals[label] = totals.get(label, 0.0) + score * weight
+            output = model(chunk, top_k=None, truncation=True, max_length=512)
+            scores = output[0] if output and isinstance(output[0], list) else output
+            for item in scores:
+                label = str(item["label"])
+                totals[label] = totals.get(label, 0.0) + float(item["score"]) * weight
             total_weight += weight
         if not totals:
             raise ValueError("No text available for sentiment analysis.")
