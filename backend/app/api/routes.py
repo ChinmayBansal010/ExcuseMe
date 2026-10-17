@@ -157,6 +157,34 @@ def compare(request: SimilarityRequest):
     }
 
 
+@router.get("/corpus/stats")
+def corpus_stats():
+    """Return local corpus size and storage metadata without loading the embedding model."""
+    import sqlite3
+
+    try:
+        with sqlite3.connect(DATABASE_PATH) as connection:
+            row = connection.execute(
+                "SELECT COUNT(*), COUNT(DISTINCT source_id) FROM passages"
+            ).fetchone()
+        passage_count, source_count = row or (0, 0)
+        database_bytes = DATABASE_PATH.stat().st_size if DATABASE_PATH.exists() else 0
+        return {
+            "status": "ok",
+            "indexed_passages": int(passage_count),
+            "distinct_sources": int(source_count),
+            "database_bytes": int(database_bytes),
+            "database_path": str(DATABASE_PATH),
+            "embedding_model": EMBEDDING_MODEL,
+        }
+    except sqlite3.OperationalError as exc:
+        logger.exception("Corpus statistics unavailable")
+        raise HTTPException(
+            status_code=503,
+            detail="Corpus statistics are unavailable because the corpus database could not be read.",
+        ) from exc
+
+
 @router.post("/search-corpus")
 def search_corpus(request: CorpusSearchRequest):
     try:
