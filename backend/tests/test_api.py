@@ -23,6 +23,17 @@ def test_diagnostics_reports_runtime_without_loading_models():
     assert "corpus_database_exists" in payload
 
 
+def test_corpus_stats_reports_index_metadata():
+    response = client.get("/api/v1/corpus/stats")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "ok"
+    assert payload["indexed_passages"] >= 0
+    assert payload["distinct_sources"] >= 0
+    assert payload["database_bytes"] >= 0
+    assert payload["embedding_model"]
+
+
 def test_tools():
     response = client.get("/api/v1/tools")
     assert response.status_code == 200
