@@ -441,7 +441,7 @@ export default function HomeScreen() {
                           <Text style={styles.qualityScoreNotice}>{value.notice || "This is a model estimate, not proof that the explanation is true or false."}</Text>
                         </View>
                       </View>
-                     : key === "stats" && value ? (
+                    ) : key === "stats" && value ? (
                       <View style={styles.metricGrid}>
                         {[
                           ["WORDS", value.words], ["SENTENCES", value.sentences],
