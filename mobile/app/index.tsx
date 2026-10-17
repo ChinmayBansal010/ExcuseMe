@@ -88,6 +88,7 @@ export default function HomeScreen() {
   const [corpusResult, setCorpusResult] = useState<any>(null);
   const [toolSearch, setToolSearch] = useState("");
   const [activePreset, setActivePreset] = useState("excuse");
+  const [recentAnalyses, setRecentAnalyses] = useState<{ id: string; text: string; operations: Operation[]; timestamp: string }[]>([]);
 
   useEffect(() => {
     healthCheck().then(setOnline).catch(() => setOnline(false));
@@ -128,7 +129,12 @@ export default function HomeScreen() {
     setLoading(true);
     setResult(null);
     try {
-      setResult(await analyzeText(text, selected, labelList));
+      const payload = await analyzeText(text, selected, labelList);
+      setResult(payload);
+      setRecentAnalyses((items) => [
+        { id: `${Date.now()}-${text.length}`, text, operations: [...selected], timestamp: new Date().toLocaleTimeString() },
+        ...items.filter((item) => item.text !== text),
+      ].slice(0, 5));
     } catch (error: any) {
       Alert.alert("Analysis failed", error.message || "Could not reach the API.");
     } finally {
@@ -260,6 +266,23 @@ export default function HomeScreen() {
             ))}
           </View>
         </View>
+        {recentAnalyses.length > 0 ? (
+          <View style={styles.caseSection}>
+            <View style={styles.focusHeading}><Text style={styles.focusTitle}>Recent analyses</Text><Pressable onPress={() => setRecentAnalyses([])}><Text style={styles.actionText}>CLEAR HISTORY</Text></Pressable></View>
+            <View style={styles.caseRow}>
+              {recentAnalyses.map((item) => (
+                <Pressable key={item.id} onPress={() => { setText(item.text); setSelected(item.operations); setTab("analyze"); setResult(null); }} style={({ pressed }) => [styles.caseChip, pressed && styles.pressed]}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.caseChipTitle} numberOfLines={1}>{item.text}</Text>
+                    <Text style={styles.counter}>{item.operations.length} tools · {item.timestamp}</Text>
+                  </View>
+                  <ChevronRight size={14} color={colors.accent} />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
+
         {tab === "analyze" ? (
           <>
             <Panel>
