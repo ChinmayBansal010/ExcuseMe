@@ -87,9 +87,9 @@ class ExplanationQualityService:
                 "This estimates whether the text functions as an excuse; it does not determine "
                 "whether the excuse is true or whether someone is lying."
                 if is_calibrated
-                else "This percentage is the raw zero-shot model score, not a calibrated probability. "
-                "To enable calibrated probabilities, fit the calibrator on a representative CSV of "
-                "human-labelled examples using backend/scripts/calibrate_excuse.py. This score does "
+                else "This percentage is the zero-shot model score, not a calibrated probability. "
+                "Treat it as a rough estimate of whether the text functions as an excuse. It does "
+                "not determine whether the excuse is true or whether someone is lying. This score does "
                 "not determine whether an excuse is true or whether someone is lying."
             ),
         }
