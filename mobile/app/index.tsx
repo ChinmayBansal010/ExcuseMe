@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Activity, AudioLines, BrainCircuit, Check, ChevronRight, CircleAlert, FileText,
-  Languages, Moon, Sun,
+  Languages, Moon, Sparkles, Sun,
 } from "lucide-react-native";
 import { Panel } from "@/components/Panel";
 import { SectionTitle } from "@/components/SectionTitle";
