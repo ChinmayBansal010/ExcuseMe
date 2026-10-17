@@ -13,12 +13,11 @@ class ExplanationQualityService:
     """Estimate whether a passage functions as an excuse, not whether it is true."""
 
     EXCUSE_LABEL = (
-        "The text gives an excuse or justification for an action, absence, "
-        "delay, mistake, or failure."
+        "an excuse or justification for an action, absence, delay, mistake, or failure"
     )
-    NOT_EXCUSE_LABEL = (
-        "The text does not give an excuse or justification; it is ordinary "
-        "information, a question, an instruction, or unrelated text."
+    NEUTRAL_LABEL = "a neutral factual statement with no excuse or justification"
+    OTHER_LABEL = (
+        "a question, instruction, or unrelated statement that does not function as an excuse"
     )
     CALIBRATOR_PATH = DATA_DIR / "excuse_probability_calibrator.joblib"
 
@@ -43,7 +42,12 @@ class ExplanationQualityService:
         )
         output = model(
             text,
-            candidate_labels=[cls.EXCUSE_LABEL, cls.NOT_EXCUSE_LABEL],
+            candidate_labels=[
+                cls.EXCUSE_LABEL,
+                cls.NEUTRAL_LABEL,
+                cls.OTHER_LABEL,
+            ],
+            hypothesis_template="This text is {}.",
             multi_label=False,
             truncation=True,
         )
@@ -87,9 +91,9 @@ class ExplanationQualityService:
                 "This estimates whether the text functions as an excuse; it does not determine "
                 "whether the excuse is true or whether someone is lying."
                 if is_calibrated
-                else "This percentage is the zero-shot model score, not a calibrated probability. "
-                "Treat it as a rough estimate of whether the text functions as an excuse. It does not "
-                "determine whether the excuse is true or whether someone is lying."
+                else "This percentage is an uncalibrated zero-shot model score, not a reliable "
+                "probability. Treat it as a rough estimate of whether the text functions as an "
+                "excuse. It does not determine whether the excuse is true or whether someone is lying."
             ),
         }
 
