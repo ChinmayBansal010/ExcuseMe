@@ -19,7 +19,7 @@ const TOOLS: { id: Operation; title: string; desc: string; icon: any; tint: stri
   { id: "sentiment", title: "Sentiment", desc: "Positive or negative tone", icon: Activity, tint: baseColors.blue },
   { id: "emotion", title: "Emotion map", desc: "Rank emotional signals", icon: AudioLines, tint: baseColors.purple },
   { id: "summary", title: "Summarize", desc: "Compress long passages", icon: FileText, tint: baseColors.purple },
-  { id: "excuse", title: "Explanation quality", desc: "AI feedback on clarity, detail, completeness and consistency", icon: BrainCircuit, tint: baseColors.red },
+  { id: "excuse", title: "Excuse likelihood", desc: "Estimate how likely the text is to be an excuse", icon: BrainCircuit, tint: baseColors.red },
 ];
 
 const DEMO = "I was going to submit the assignment yesterday, but my laptop stopped working right before the deadline. I contacted my teammate and promised to send the file this evening.";
@@ -426,51 +426,22 @@ export default function HomeScreen() {
                         <View style={styles.qualityScoreCard}>
                           <View style={styles.qualityScoreTop}>
                             <View style={{ flex: 1, gap: 5 }}>
-                              <Text style={styles.qualityScoreEyebrow}>EXPLANATION QUALITY</Text>
+                              <Text style={styles.qualityScoreEyebrow}>EXCUSE LIKELIHOOD</Text>
                               <Text style={styles.qualityScoreLabel}>{value.overall || "Analysis complete"}</Text>
-                              <Text style={styles.qualityScoreSub}>{value.score_label || "Model-estimated writing signals"}</Text>
+                              <Text style={styles.qualityScoreSub}>{value.score_label || "Model-estimated excuse likelihood"}</Text>
                             </View>
                             <View style={styles.qualityScoreCircle}>
                               <Text style={styles.qualityScoreNumber}>{Number.isFinite(Number(value.score)) ? Math.round(Number(value.score)) : "—"}%</Text>
-                              <Text style={styles.qualityScoreCaption}>QUALITY</Text>
+                              <Text style={styles.qualityScoreCaption}>LIKELIHOOD</Text>
                             </View>
                           </View>
                           <View style={styles.qualityScoreTrack}>
                             <View style={[styles.qualityScoreFill, { width: `${Math.max(0, Math.min(100, Number(value.score) || 0))}%` }]} />
                           </View>
-                          <Text style={styles.qualityScoreNotice}>This is a model-estimated writing-quality score, not the probability that the excuse is true or false.</Text>
+                          <Text style={styles.qualityScoreNotice}>{value.notice || "This is a model estimate, not proof that the explanation is true or false."}</Text>
                         </View>
-                        <View style={{ gap: 10 }}>
-                          <Text style={styles.qualitySectionTitle}>WHAT THE MODEL NOTICED</Text>
-                          {(value.dimensions || []).map((dimension: any) => {
-                            const score = Math.round(Math.max(0, Math.min(1, Number(dimension.score) || 0)) * 100);
-                            const positive = dimension.status === "positive";
-                            return (
-                              <View key={dimension.key} style={styles.qualityDimensionCard}>
-                                <View style={styles.qualityDimensionHeader}>
-                                  <View style={{ flex: 1, gap: 4 }}>
-                                    <Text style={styles.qualityDimensionTitle}>{dimension.title}</Text>
-                                    <Text style={[styles.qualityDimensionAssessment, positive ? styles.qualityDimensionGood : styles.qualityDimensionReview]}>{dimension.assessment}</Text>
-                                  </View>
-                                  <Text style={styles.qualityDimensionScore}>{score}%</Text>
-                                </View>
-                                <View style={styles.qualityDimensionTrack}>
-                                  <View style={[styles.qualityDimensionFill, { width: `${score}%`, backgroundColor: positive ? colors.green : colors.orange }]} />
-                                </View>
-                                <Text style={styles.resultBody}>{dimension.explanation}</Text>
-                                {Array.isArray(dimension.evidence) && dimension.evidence.length > 0 ? (
-                                  <View style={styles.qualityEvidence}>
-                                    <Text style={styles.qualityEvidenceLabel}>RELEVANT TEXT</Text>
-                                    {dimension.evidence.map((quote: string, index: number) => <Text key={index} style={styles.qualityQuote}>“{quote}”</Text>)}
-                                  </View>
-                                ) : null}
-                              </View>
-                            );
-                          })}
-                        </View>
-                        <Text style={styles.qualityScoreNotice}>{value.notice || "AI feedback describes wording only and cannot establish truth or deception."}</Text>
                       </View>
-                    ) : key === "stats" && value ? (
+                     : key === "stats" && value ? (
                       <View style={styles.metricGrid}>
                         {[
                           ["WORDS", value.words], ["SENTENCES", value.sentences],
