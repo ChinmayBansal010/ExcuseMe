@@ -300,6 +300,18 @@ export default function HomeScreen() {
               placeholderTextColor={colors.muted}
               style={[styles.textArea, { minHeight: 76 }]}
             />
+            <Text style={styles.fieldLabel}>QUICK STARTERS</Text>
+            <View style={styles.caseRow}>
+              {([
+                ["Running late", "I am running late because my train was delayed"],
+                ["Need an extension", "I need a little more time to finish the work properly"],
+                ["Reschedule", "I cannot make our planned time and would like to reschedule"],
+              ] as const).map(([label, reason]) => (
+                <Pressable key={label} onPress={() => setMessageReason(reason)} style={styles.builderOption}>
+                  <Text style={styles.builderOptionText}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
             <Text style={styles.fieldLabel}>WHO IS IT FOR?</Text>
             <View style={styles.caseRow}>
               {([["teacher", "Teacher / lecturer"], ["manager", "Manager / colleague"], ["friend", "Friend"]] as const).map(([value, label]) => (
