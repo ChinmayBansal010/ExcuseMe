@@ -69,6 +69,10 @@ class ExplanationQualityService:
             if not ranked:
                 raise RuntimeError("The explanation quality model returned no assessment.")
             label, _ = max(ranked, key=lambda item: float(item[1]))
+            positive_score = next(
+                (float(score) for candidate, score in ranked if candidate == positive),
+                0.0,
+            )
             positive_signal = label == positive
             evidence = [
                 sentence for sentence in sentences
@@ -87,15 +91,26 @@ class ExplanationQualityService:
                     ("Looks good" if positive_signal else "May need more detail")
                 ),
                 "status": "positive" if positive_signal else "review",
+                "score": round(max(0.0, min(1.0, positive_score)), 4),
                 "explanation": dimension["good"] if positive_signal else dimension["review"],
                 "evidence": evidence[:2],
             })
 
+        quality_score = round(
+            sum(item["score"] for item in findings) / len(findings) * 100
+        ) if findings else 0
+
         return {
             "title": "Explanation quality",
+            "score": quality_score,
+            "score_label": (
+                "Strong writing signals" if quality_score >= 70
+                else "Mixed writing signals" if quality_score >= 50
+                else "More detail recommended"
+            ),
             "overall": (
-                "Well explained"
-                if sum(item["status"] == "positive" for item in findings) >= 3
+                "Well explained" if quality_score >= 70
+                else "Partly explained" if quality_score >= 50
                 else "Could be clearer"
             ),
             "dimensions": findings,
