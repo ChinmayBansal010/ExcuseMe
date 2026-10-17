@@ -13,6 +13,16 @@ def test_health():
     assert response.json()["status"] == "ok"
 
 
+def test_diagnostics_reports_runtime_without_loading_models():
+    response = client.get("/api/v1/diagnostics")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "ok"
+    assert payload["inference_device"] in {"cpu", "cuda:0"}
+    assert isinstance(payload["gpu_available"], bool)
+    assert "corpus_database_exists" in payload
+
+
 def test_tools():
     response = client.get("/api/v1/tools")
     assert response.status_code == 200
