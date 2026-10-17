@@ -2,7 +2,7 @@ const API_URL = (process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:8000").repl
 
 export type Operation =
   | "stats" | "sentiment" | "emotion" | "entities" | "keywords"
-  | "pos" | "summary" | "zero_shot" | "excuse" | "syntax" | "language";
+  | "summary" | "excuse" | "language";
 
 async function readResponse(response: Response) {
   let payload: any;
