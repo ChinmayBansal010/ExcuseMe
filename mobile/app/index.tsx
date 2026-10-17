@@ -432,7 +432,7 @@ export default function HomeScreen() {
                             </View>
                             <View style={styles.qualityScoreCircle}>
                               <Text style={styles.qualityScoreNumber}>{Number.isFinite(Number(value.score)) ? Math.round(Number(value.score)) : "—"}%</Text>
-                              <Text style={styles.qualityScoreCaption}>LIKELIHOOD</Text>
+                              <Text style={styles.qualityScoreCaption}>{value.calibrated ? "PROBABILITY" : "MODEL SCORE"}</Text>
                             </View>
                           </View>
                           <View style={styles.qualityScoreTrack}>
