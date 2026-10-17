@@ -17,7 +17,7 @@ TOOLS = [
     {"id": "sentiment", "name": "Tone", "description": "Estimates whether wording sounds positive or negative.", "category": "understanding"},
     {"id": "emotion", "name": "Emotion", "description": "Highlights possible emotional tone in a message.", "category": "understanding"},
     {"id": "summary", "name": "Summarize", "description": "Creates a shorter version of longer text.", "category": "writing"},
-    {"id": "excuse", "name": "Explanation quality", "description": "AI feedback on clarity, specificity, completeness and possible internal consistency, with text evidence.", "category": "writing"},
+    {"id": "excuse", "name": "Excuse likelihood", "description": "Estimates whether a message functions as an excuse or justification.", "category": "understanding"},
     {"id": "similarity", "name": "Compare explanations", "description": "Compares the meaning of two passages.", "category": "writing"},
 
 ]
