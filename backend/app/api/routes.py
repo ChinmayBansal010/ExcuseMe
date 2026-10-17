@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from fastapi import APIRouter, HTTPException
 
-from app.core.config import EMBEDDING_MODEL
+from app.core.config import DATABASE_PATH, EMBEDDING_MODEL
 from app.schemas.analysis import AnalyzeRequest, SimilarityRequest, CorpusSearchRequest
 from app.services.nlp_service import nlp_service
 from app.services.corpus_service import corpus_service
@@ -44,7 +44,7 @@ def diagnostics():
         gpu_available = False
         gpu_name = None
 
-    database_path = Path(os.getenv("DATABASE_PATH", "data/corpus.sqlite3"))
+    database_path = Path(DATABASE_PATH)
     return {
         "status": "ok",
         "python_version": __import__("platform").python_version(),
