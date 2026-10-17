@@ -89,6 +89,10 @@ export default function HomeScreen() {
   const [toolSearch, setToolSearch] = useState("");
   const [activePreset, setActivePreset] = useState("excuse");
   const [recentAnalyses, setRecentAnalyses] = useState<{ id: string; text: string; operations: Operation[]; timestamp: string }[]>([]);
+  const [messageReason, setMessageReason] = useState("");
+  const [messageAudience, setMessageAudience] = useState<"teacher" | "manager" | "friend">("teacher");
+  const [messageTone, setMessageTone] = useState<"polite" | "formal" | "casual">("polite");
+  const [generatedMessage, setGeneratedMessage] = useState("");
 
   useEffect(() => {
     healthCheck().then(setOnline).catch(() => setOnline(false));
@@ -180,6 +184,23 @@ export default function HomeScreen() {
     setTab("analyze");
   };
   const loadCase = (value: string) => { setText(value); setResult(null); setTab("analyze"); };
+  const buildMessage = () => {
+    const reason = messageReason.trim();
+    if (!reason) return Alert.alert("Add a reason", "Write a short, honest explanation first.");
+    const opening = messageAudience === "teacher" ? "Hi, I wanted to let you know" : messageAudience === "manager" ? "Hello, I wanted to update you" : "Hey, just wanted to let you know";
+    const request = messageAudience === "teacher" ? "Could you please let me know what the best next step would be?" : messageAudience === "manager" ? "Please let me know how you would like me to proceed." : "Let me know what works for you.";
+    const closing = messageTone === "formal" ? "I apologise for the inconvenience and appreciate your understanding." : messageTone === "casual" ? "Sorry about the trouble, and thanks for understanding." : "I'm sorry for the inconvenience, and I appreciate your understanding.";
+    const body = messageTone === "formal" ? `${opening} that ${reason.replace(/[.!?]+$/, "")}. ${request} ${closing}` : `${opening} that ${reason.replace(/[.!?]+$/, "")}. ${closing} ${request}`;
+    setGeneratedMessage(body);
+  };
+  const shareGeneratedMessage = async () => {
+    if (!generatedMessage) return;
+    try {
+      await Share.share({ title: "Message draft", message: generatedMessage });
+    } catch (error: any) {
+      Alert.alert("Share failed", error?.message || "Could not share the message.");
+    }
+  };
 
   if (splashVisible) {
     return (
@@ -265,6 +286,50 @@ export default function HomeScreen() {
               </Pressable>
             ))}
           </View>
+        </View>
+        <View style={styles.caseSection}>
+          <View style={styles.focusHeading}><Text style={styles.focusTitle}>Write a clear message</Text><Text style={styles.focusHint}>MESSAGE BUILDER</Text></View>
+          <Panel>
+            <SectionTitle title="Explain it in your own words" detail="Build a respectful draft from an honest reason. Review it before sending." />
+            <TextInput
+              value={messageReason}
+              onChangeText={setMessageReason}
+              multiline
+              textAlignVertical="top"
+              placeholder="e.g. My train was delayed and I will arrive 20 minutes late"
+              placeholderTextColor={colors.muted}
+              style={[styles.textArea, { minHeight: 76 }]}
+            />
+            <Text style={styles.fieldLabel}>WHO IS IT FOR?</Text>
+            <View style={styles.caseRow}>
+              {([["teacher", "Teacher / lecturer"], ["manager", "Manager / colleague"], ["friend", "Friend"]] as const).map(([value, label]) => (
+                <Pressable key={value} onPress={() => setMessageAudience(value)} style={[styles.builderOption, messageAudience === value && styles.builderOptionActive]}>
+                  <Text style={[styles.builderOptionText, messageAudience === value && styles.builderOptionTextActive]}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <Text style={styles.fieldLabel}>TONE</Text>
+            <View style={styles.caseRow}>
+              {([["polite", "Polite"], ["formal", "Formal"], ["casual", "Casual"]] as const).map(([value, label]) => (
+                <Pressable key={value} onPress={() => setMessageTone(value)} style={[styles.builderOption, messageTone === value && styles.builderOptionActive]}>
+                  <Text style={[styles.builderOptionText, messageTone === value && styles.builderOptionTextActive]}>{label}</Text>
+                </Pressable>
+              ))}
+            </View>
+            <Pressable onPress={buildMessage} style={styles.primaryButton}>
+              <WandSparkles size={17} color={colors.bg} /><Text style={styles.primaryButtonText}>Create message draft</Text>
+            </Pressable>
+            {generatedMessage ? (
+              <View style={styles.generatedMessage}>
+                <Text style={styles.resultBody}>{generatedMessage}</Text>
+                <View style={styles.panelActions}>
+                  <Pressable onPress={() => { setText(generatedMessage); setResult(null); setTab("analyze"); }}><Text style={styles.actionText}>ANALYZE DRAFT</Text></Pressable>
+                  <Pressable onPress={shareGeneratedMessage}><Text style={styles.actionText}>SHARE DRAFT</Text></Pressable>
+                  <Pressable onPress={() => setGeneratedMessage("")}><Text style={styles.actionText}>DISMISS</Text></Pressable>
+                </View>
+              </View>
+            ) : null}
+          </Panel>
         </View>
         {recentAnalyses.length > 0 ? (
           <View style={styles.caseSection}>
@@ -601,6 +666,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   caseRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   caseChip: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10, flexGrow: 1, flexBasis: 130, backgroundColor: colors.panel2, borderWidth: 1, borderColor: colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 11 },
   caseChipTitle: { color: colors.text, fontSize: 11, fontWeight: "700" },
+  builderOption: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel2, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
+  builderOptionActive: { borderColor: colors.selectedBorder, backgroundColor: colors.selected },
+  builderOptionText: { color: colors.muted, fontSize: 11, fontWeight: "700" },
+  builderOptionTextActive: { color: colors.text },
+  generatedMessage: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.panel2, borderRadius: 12, padding: 13, gap: 12, marginTop: 12 },
   pressed: { transform: [{ translateY: 2 }], opacity: 0.88 },
   heroWide: { flexDirection: "row", alignItems: "center", gap: 22, minHeight: 250 },
   heroCopy: { flex: 1, minWidth: 0 },
