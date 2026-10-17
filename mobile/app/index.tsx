@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Activity, AudioLines, BrainCircuit, Check, ChevronRight, CircleAlert, FileText,
-  Gauge, Languages, Moon, Search, Sparkles, Sun, Tags, TextSearch, WandSparkles,
+  Languages, Moon, Sun,
 } from "lucide-react-native";
 import { Panel } from "@/components/Panel";
 import { SectionTitle } from "@/components/SectionTitle";
@@ -71,11 +71,10 @@ export default function HomeScreen() {
   const ThemeIcon = isDark ? Sun : Moon;
   const [text, setText] = useState(DEMO);
   const [selected, setSelected] = useState<Operation[]>(["excuse", "sentiment", "emotion"]);
-  const [labels, setLabels] = useState("excuse, apology, promise, complaint, joke");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [online, setOnline] = useState(false);
-  const [tab, setTab] = useState<"analyze" | "compare" | "corpus">("analyze");
+  const [tab, setTab] = useState<"analyze" | "compare">("analyze");
   const [textB, setTextB] = useState("I couldn't finish it because my computer crashed.");
   const [secondary, setSecondary] = useState<any>(null);
   const [toolSearch, setToolSearch] = useState("");
@@ -118,14 +117,10 @@ export default function HomeScreen() {
     if (!text.trim()) return Alert.alert("Text required", "Paste or type some text first.");
     if (text.length > MAX_TEXT_CHARS) return Alert.alert("Text too long", "Keep the input under 20,000 characters.");
     if (!selected.length) return Alert.alert("Choose a tool", "Select at least one NLP operation.");
-    const labelList = labels.split(",").map((x) => x.trim()).filter(Boolean);
-    if (selected.includes("zero_shot") && labelList.length < 2) {
-      return Alert.alert("More labels required", "Custom classification needs at least two comma-separated labels.");
-    }
     setLoading(true);
     setResult(null);
     try {
-      const payload = await analyzeText(text, selected, labelList);
+      const payload = await analyzeText(text, selected);
       setResult(payload);
       setRecentAnalyses((items) => [
         { id: `${Date.now()}-${text.length}`, text, operations: [...selected], timestamp: new Date().toLocaleTimeString() },
@@ -243,10 +238,10 @@ export default function HomeScreen() {
         <View style={styles.focusSection}>
           <View style={styles.focusHeading}><Text style={styles.focusTitle}>Start with a focus</Text><Text style={styles.focusHint}>PICK A LENS</Text></View>
           <View style={styles.presetRow}>
-            {([["excuse", "Excuse cues", "Explanation · hedge · promise"], ["profile", "Language profile", "Syntax · entities · structure"], ["emotion", "Tone & emotion", "Sentiment · emotional signals"]] as const).map(([key, title, detail]) => (
+            {([["excuse", "Explanation quality", "Clarity · detail · completeness"], ["profile", "Language & summary", "Identify language · summarize text"], ["emotion", "Tone & emotion", "Understand the emotional tone"]] as const).map(([key, title, detail]) => (
               <Pressable key={key} onPress={() => applyPreset(key)} style={({ pressed }) => [styles.presetCard, activePreset === key && styles.presetCardActive, pressed && styles.pressed]}>
                 <View style={[styles.presetMark, activePreset === key && styles.presetMarkActive]}>
-                  {key === "excuse" ? <BrainCircuit size={18} color={activePreset === key ? colors.bg : colors.red} /> : key === "profile" ? <TextSearch size={18} color={activePreset === key ? colors.bg : colors.blue} /> : <AudioLines size={18} color={activePreset === key ? colors.bg : colors.purple} />}
+                  {key === "excuse" ? <BrainCircuit size={18} color={activePreset === key ? colors.bg : colors.red} /> : key === "profile" ? <Languages size={18} color={activePreset === key ? colors.bg : colors.blue} /> : <AudioLines size={18} color={activePreset === key ? colors.bg : colors.purple} />}
                 </View>
                 <Text style={styles.presetTitle}>{title}</Text>
                 {width >= 600 ? <Text style={styles.presetDetail}>{detail}</Text> : null}
@@ -409,13 +404,6 @@ export default function HomeScreen() {
                 );
               })}
             </View>
-
-            {selected.includes("zero_shot") ? (
-              <Panel>
-                <SectionTitle title="Custom classification labels" detail="Separate labels with commas." />
-                <TextInput value={labels} onChangeText={setLabels} style={styles.singleInput} placeholder="e.g. apology, excuse, promise" placeholderTextColor={colors.muted} />
-              </Panel>
-            ) : null}
 
             <Pressable onPress={runAnalysis} disabled={loading} style={[styles.primaryButton, loading && { opacity: 0.65 }]}>
               {loading ? <ActivityIndicator color={colors.bg} /> : <Sparkles size={18} color={colors.bg} />}
