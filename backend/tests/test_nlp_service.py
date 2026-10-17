@@ -40,3 +40,24 @@ def test_emotion_aggregates_scores_across_chunks(monkeypatch):
     assert result["chunks_analyzed"] >= 2
     assert {item["label"] for item in result["predictions"]} == {"joy", "sadness"}
     assert all(0 <= item["score"] <= 1 for item in result["predictions"])
+
+
+
+class FakeZeroShotPipeline:
+    def __call__(self, text, candidate_labels, **kwargs):
+        if "apology" in text:
+            scores = [0.9 if label == "apology" else 0.1 for label in candidate_labels]
+        else:
+            scores = [0.8 if label == "promise" else 0.2 for label in candidate_labels]
+        ranked = sorted(zip(candidate_labels, scores), key=lambda item: item[1], reverse=True)
+        return {"labels": [item[0] for item in ranked], "scores": [item[1] for item in ranked]}
+
+
+def test_zero_shot_aggregates_custom_labels_across_chunks(monkeypatch):
+    service = NLPService()
+    monkeypatch.setattr(service, "_get_pipeline", lambda *args, **kwargs: FakeZeroShotPipeline())
+    text = ("apology " * 280) + ". " + ("promise " * 280) + "."
+    result = service.zero_shot(text, ["apology", "promise"])
+    assert result["chunks_analyzed"] >= 2
+    assert {item["label"] for item in result["predictions"]} == {"apology", "promise"}
+    assert all(0 <= item["score"] <= 1 for item in result["predictions"])
