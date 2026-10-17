@@ -22,9 +22,11 @@ async function readResponse(response: Response) {
   return payload;
 }
 
+const REQUEST_TIMEOUT_MS = 15 * 60 * 1000; // Allow first-run Hugging Face model downloads and initialization.
+
 async function postJson(path: string, body: Record<string, unknown>) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120_000);
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${API_URL}${path}`, {
@@ -36,7 +38,7 @@ async function postJson(path: string, body: Record<string, unknown>) {
     return await readResponse(response);
   } catch (error: any) {
     if (error?.name === "AbortError") {
-      throw new Error("The request took too long. The first model run may need more time; check that the backend is running and try again.");
+      throw new Error("The request exceeded the 15-minute limit. Check your internet connection and backend logs; the first run may need to finish downloading its models before retrying.");
     }
     if (error instanceof TypeError) {
       throw new Error(`Cannot reach the ExcuseMoi API at ${API_URL}. Check the backend URL, network connection, and CORS configuration.`);
