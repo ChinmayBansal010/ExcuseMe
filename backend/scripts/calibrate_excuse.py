@@ -89,7 +89,7 @@ def main() -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(calibrator, output_path)
     metrics_path = output_path.with_suffix(".metrics.json")
-    metrics_path.write_text(json.dumps(metrics, indent=2) + "\\n", encoding="utf-8")
+    metrics_path.write_text(json.dumps(metrics, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"calibrator": str(output_path), "metrics_file": str(metrics_path), "metrics": metrics}, indent=2))
 
 
