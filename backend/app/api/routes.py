@@ -7,6 +7,7 @@ from app.core.config import DATABASE_PATH, EMBEDDING_MODEL
 from app.schemas.analysis import AnalyzeRequest, SimilarityRequest, CorpusSearchRequest
 from app.services.nlp_service import nlp_service
 from app.services.corpus_service import corpus_service
+from app.services.explanation_quality import explanation_quality_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["NLP"])
@@ -66,7 +67,10 @@ def get_tools():
 @router.post("/analyze")
 def analyze(request: AnalyzeRequest):
     try:
-        results = nlp_service.analyze(request.text, request.operations, request.labels)
+        operations = [op for op in request.operations if op != "excuse"]
+        results = nlp_service.analyze(request.text, operations, request.labels)
+        if "excuse" in request.operations:
+            results["excuse"] = explanation_quality_service.analyze(request.text)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except RuntimeError as exc:
