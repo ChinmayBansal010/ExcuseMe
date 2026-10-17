@@ -447,65 +447,11 @@ export default function HomeScreen() {
                           </View>
                         ))}
                       </View>
-                    ) : key === "pos" ? (
-                      <View style={{ gap: 10 }}>
-                        <Text style={styles.counter}>{(value.tokens || []).length} tokens · lemma, POS, tag and dependency</Text>
-                        <ScrollView style={{ maxHeight: 260 }} nestedScrollEnabled showsVerticalScrollIndicator>
-                          <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator><View style={styles.tokenTable}>
-                            <View style={[styles.tokenRow, styles.tokenHeader]}>{["TOKEN", "LEMMA", "POS", "TAG", "DEPENDENCY", "HEAD"].map((label) => <Text key={label} style={[styles.tokenCell, styles.tokenHeaderText]}>{label}</Text>)}</View>
-                            {(value.tokens || []).map((token: any, i: number) => <View key={String(token.text) + "-" + i} style={[styles.tokenRow, i % 2 === 0 && { backgroundColor: colors.panel2 }]}>{[token.text, token.lemma, token.pos, token.tag, token.dependency, token.head].map((part: any, j: number) => <Text key={j} selectable style={[styles.tokenCell, j === 2 && { color: colors.accent, fontWeight: "800" }]}>{String(part ?? "—")}</Text>)}</View>)}
-                          </View></ScrollView>
-                        </ScrollView>
-                      </View>
-                    ) : key === "syntax" ? (
-                      <View style={{ gap: 10 }}>{(value.sentences || []).map((sentence: any, i: number) => <View key={i} style={styles.syntaxCard}>
-                        <Text style={styles.resultBody}>{sentence.text}</Text>
-                        <View style={styles.syntaxRoot}><Text style={styles.metricLabel}>SENTENCE ROOT</Text><Text style={styles.syntaxRootValue}>{sentence.root || "—"}</Text></View>
-                        {(sentence.tokens || []).map((token: any, j: number) => <View key={String(token.text) + "-" + j} style={styles.detailRow}><View style={{ flex: 1 }}><Text style={styles.detailValue}>{token.text}</Text><Text style={styles.detailLabel}>{token.dependency} · head: {token.head}</Text></View><Text style={styles.syntaxChildren}>{(token.children || []).join(", ") || "No children"}</Text></View>)}
-                      </View>)}</View>
                     ) : key === "language" ? (
                       <View style={{ gap: 12 }}>
                         <View style={styles.languageHero}><Languages size={22} color={colors.accent} /><View style={{ flex: 1 }}><Text style={styles.metricLabel}>DETECTED LANGUAGE</Text><Text style={styles.languageCode}>{String(value.language_code || "unknown").toUpperCase()}</Text></View></View>
                         {(value.alternatives || []).map((item: any) => <View key={item.language} style={styles.barRow}><Text style={styles.barLabel}>{item.language}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: String(Math.max(2, item.probability * 100) + "%"), backgroundColor: colors.blue }]} /></View><Text style={styles.barScore}>{Math.round(item.probability * 100)}%</Text></View>)}
                         {value.note ? <Text style={styles.resultBody}>{value.note}</Text> : null}
-                      </View>
-                    ) : key === "zero_shot" ? (
-                      <View style={{ gap: 12 }}>
-                        <Text style={styles.resultBody}>Your custom labels, ranked by model score.</Text>
-                        {(value.predictions || []).map((p: any) => <View key={p.label} style={{ gap: 6 }}><View style={styles.predictionRow}><Text style={styles.toolTitle}>{p.label}</Text><Text style={styles.scorePill}>{Math.round(p.score * 100)}%</Text></View><View style={[styles.barTrack, { height: 9 }]}><View style={[styles.barFill, { height: 9, width: String(Math.max(2, p.score * 100) + "%"), backgroundColor: colors.accent }]} /></View></View>)}
-                      </View>
-                    ) : key === "entities" ? (
-                      value.entities?.length ? <View style={styles.chipWrap}>{value.entities.map((e: any, i: number) => <View key={`${e.text}-${i}`} style={styles.entityChip}><Text style={styles.entityText}>{e.text}</Text><Text style={styles.entityLabel}>{e.label}</Text></View>)}</View> : <Text style={styles.emptyText}>No named entities detected.</Text>
-                    ) : key === "keywords" ? (
-                      <View style={{ gap: 10 }}>
-                        {(value.keywords || []).length ? value.keywords.map((k: any, i: number) => <View key={k.term} style={styles.keywordResultRow}>
-                          <View style={styles.keywordRank}><Text style={styles.keywordRankText}>{i + 1}</Text></View>
-                          <View style={{ flex: 1, gap: 5 }}><Text style={styles.entityText}>{k.term}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: keywordBarWidth(k.score, value.keywords)}]} /></View></View>
-                          <Text style={styles.counter}>×{k.frequency ?? 0}</Text>
-                        </View>) : <Text style={styles.emptyText}>No keywords found.</Text>}
-                      </View>
-                    ) : key === "excuse" ? (
-                      <View style={{ gap: 12 }}>
-                        <View style={styles.scoreHeader}>
-                          <Text style={styles.bigScoreSmall}>{value.overall || "Explanation review"}</Text>
-                          <Text style={styles.scorePill}>{value.dimensions?.length || 0} areas checked</Text>
-                        </View>
-                        {(value.dimensions || []).map((item: any) => (
-                          <View key={item.key} style={styles.qualityCard}>
-                            <View style={styles.predictionRow}>
-                              <Text style={styles.qualityTitle}>{item.title}</Text>
-                              <Text style={[styles.scorePill, item.status === "positive" && styles.qualityPositive]}>{item.assessment}</Text>
-                            </View>
-                            <Text style={styles.resultBody}>{item.explanation}</Text>
-                            {item.evidence?.length ? (
-                              <View style={styles.qualityEvidence}>
-                                <Text style={styles.fieldLabel}>FROM YOUR TEXT</Text>
-                                {item.evidence.map((line: string, i: number) => <Text key={i} style={styles.qualityQuote}>“{line}”</Text>)}
-                              </View>
-                            ) : null}
-                          </View>
-                        ))}
-                        <Text style={styles.warningText}>{value.notice}</Text>
                       </View>
                     ) : key === "summary" ? (
                       <View style={{ gap: 10 }}><Text style={styles.resultBody}>{value.summary}</Text>{value.note ? <Text style={styles.counter}>{value.note}</Text> : null}{value.model ? <Text style={styles.counter}>Model: {value.model}</Text> : null}</View>
