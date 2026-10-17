@@ -276,13 +276,25 @@ class NLPService:
         if len(labels) < 2:
             raise ValueError("Provide at least two candidate labels.")
         model = self._get_pipeline("zero_shot", "zero-shot-classification", ZERO_SHOT_MODEL)
-        output = model(text[:5000], candidate_labels=labels, multi_label=True)
+        chunks = self._text_chunks(text)
+        totals = {label: 0.0 for label in labels}
+        total_weight = 0
+        for chunk in chunks:
+            weight = max(1, len(chunk.split()))
+            output = model(chunk, candidate_labels=labels, multi_label=True, truncation=True)
+            for label, score in zip(output["labels"], output["scores"]):
+                totals[label] = totals.get(label, 0.0) + float(score) * weight
+            total_weight += weight
+        predictions = [
+            {"label": label, "score": round(score / max(total_weight, 1), 4)}
+            for label, score in totals.items()
+        ]
+        predictions.sort(key=lambda item: item["score"], reverse=True)
         return {
             "model": ZERO_SHOT_MODEL,
-            "predictions": [
-                {"label": label, "score": round(float(score), 4)}
-                for label, score in zip(output["labels"], output["scores"])
-            ],
+            "predictions": predictions,
+            "chunks_analyzed": len(chunks),
+            "note": "Custom-label scores are averaged across sentence-based chunks and are not calibrated probabilities.",
         }
 
 
