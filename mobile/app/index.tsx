@@ -10,22 +10,16 @@ import {
 import { Panel } from "@/components/Panel";
 import { SectionTitle } from "@/components/SectionTitle";
 import { OrbitScene } from "@/components/OrbitScene";
-import { analyzeText, compareTexts, healthCheck, searchCorpus, Operation } from "@/lib/api";
+import { analyzeText, compareTexts, healthCheck, Operation } from "@/lib/api";
 import { colors as baseColors } from "@/theme/colors";
 import { useAppTheme, type ThemeColors } from "@/theme/ThemeContext";
 
 const TOOLS: { id: Operation; title: string; desc: string; icon: any; tint: string }[] = [
   { id: "language", title: "Language ID", desc: "Detect language and alternatives", icon: Languages, tint: baseColors.orange },
-  { id: "stats", title: "Text metrics", desc: "Readability, vocabulary, sentence stats", icon: Gauge, tint: baseColors.accent },
   { id: "sentiment", title: "Sentiment", desc: "Positive or negative tone", icon: Activity, tint: baseColors.blue },
   { id: "emotion", title: "Emotion map", desc: "Rank emotional signals", icon: AudioLines, tint: baseColors.purple },
-  { id: "entities", title: "Named entities", desc: "People, places, dates, organisations", icon: Tags, tint: baseColors.orange },
-  { id: "keywords", title: "Keywords", desc: "Important terms and phrases", icon: TextSearch, tint: baseColors.accent },
-  { id: "pos", title: "Token & POS", desc: "Lemmas, grammar and dependencies", icon: Languages, tint: baseColors.blue },
   { id: "summary", title: "Summarize", desc: "Compress long passages", icon: FileText, tint: baseColors.purple },
-  { id: "zero_shot", title: "Custom labels", desc: "Classify against your own labels", icon: WandSparkles, tint: baseColors.orange },
-  { id: "excuse", title: "Excuse cues", desc: "Hedging, explanations and commitments", icon: BrainCircuit, tint: baseColors.red },
-  { id: "syntax", title: "Syntax explorer", desc: "Sentence roots and dependency tree", icon: Sparkles, tint: baseColors.blue },
+  { id: "excuse", title: "Explanation quality", desc: "AI feedback on clarity, detail, completeness and consistency", icon: BrainCircuit, tint: baseColors.red },
 ];
 
 const DEMO = "I was going to submit the assignment yesterday, but my laptop stopped working right before the deadline. I contacted my teammate and promised to send the file this evening.";
@@ -76,7 +70,7 @@ export default function HomeScreen() {
   const [splashVisible, setSplashVisible] = useState(true);
   const ThemeIcon = isDark ? Sun : Moon;
   const [text, setText] = useState(DEMO);
-  const [selected, setSelected] = useState<Operation[]>(["stats", "sentiment", "emotion", "entities", "keywords", "excuse"]);
+  const [selected, setSelected] = useState<Operation[]>(["excuse", "sentiment", "emotion"]);
   const [labels, setLabels] = useState("excuse, apology, promise, complaint, joke");
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
@@ -84,8 +78,6 @@ export default function HomeScreen() {
   const [tab, setTab] = useState<"analyze" | "compare" | "corpus">("analyze");
   const [textB, setTextB] = useState("I couldn't finish it because my computer crashed.");
   const [secondary, setSecondary] = useState<any>(null);
-  const [corpusQuery, setCorpusQuery] = useState("student excuses and missed deadlines");
-  const [corpusResult, setCorpusResult] = useState<any>(null);
   const [toolSearch, setToolSearch] = useState("");
   const [activePreset, setActivePreset] = useState("excuse");
   const [recentAnalyses, setRecentAnalyses] = useState<{ id: string; text: string; operations: Operation[]; timestamp: string }[]>([]);
@@ -162,24 +154,11 @@ export default function HomeScreen() {
     }
   };
 
-  const runSearch = async () => {
-    if (!corpusQuery.trim()) return;
-    setLoading(true);
-    setCorpusResult(null);
-    try {
-      setCorpusResult(await searchCorpus(corpusQuery));
-    } catch (error: any) {
-      Alert.alert("Search failed", error.message || "Could not reach the API.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const resultCards = useMemo(() => result?.results ? Object.entries(result.results) : [], [result]);
   const styles = useMemo(() => createStyles(colors), [colors]);
   const applyPreset = (preset: "excuse" | "profile" | "emotion") => {
     setActivePreset(preset);
-    const presets: Record<string, Operation[]> = { excuse: ["stats", "excuse", "keywords"], profile: ["language", "stats", "pos", "syntax", "entities", "keywords"], emotion: ["sentiment", "emotion", "stats", "excuse"] };
+    const presets: Record<string, Operation[]> = { excuse: ["excuse"], profile: ["language", "summary"], emotion: ["sentiment", "emotion"] };
     setSelected(presets[preset]);
     setTab("analyze");
   };
@@ -247,7 +226,6 @@ export default function HomeScreen() {
           {([
             ["analyze", "Analyze"],
             ["compare", "Compare"],
-            ["corpus", "Corpus search"],
           ] as const).map(([key, title]) => (
             <Pressable key={key} onPress={() => setTab(key)} style={[styles.tab, tab === key && styles.tabActive]}>
               <Text style={[styles.tabText, tab === key && styles.tabTextActive]}>{title}</Text>
@@ -390,8 +368,8 @@ export default function HomeScreen() {
 
             <View style={styles.sectionRow}>
               <SectionTitle
-                title="Choose operations"
-                detail={`${chosenCount} selected · ${filteredTools.length} tools shown`}
+                title="Choose what to learn"
+                detail={`${chosenCount} selected`}
               />
               <View style={styles.panelActions}>
                 <Pressable onPress={() => setSelected(TOOLS.map((t) => t.id))}>
@@ -406,7 +384,7 @@ export default function HomeScreen() {
             <TextInput
               value={toolSearch}
               onChangeText={setToolSearch}
-              placeholder="Search NLP tools..."
+              placeholder="Find a feature..."
               placeholderTextColor={colors.muted}
               style={styles.singleInput}
             />
@@ -441,7 +419,7 @@ export default function HomeScreen() {
 
             <Pressable onPress={runAnalysis} disabled={loading} style={[styles.primaryButton, loading && { opacity: 0.65 }]}>
               {loading ? <ActivityIndicator color={colors.bg} /> : <Sparkles size={18} color={colors.bg} />}
-              <Text style={styles.primaryButtonText}>{loading ? "Processing text..." : "Run NLP analysis"}</Text>
+              <Text style={styles.primaryButtonText}>{loading ? "Reviewing your text..." : "Review explanation"}</Text>
               {!loading ? <ChevronRight size={18} color={colors.bg} /> : null}
             </Pressable>
 
@@ -519,17 +497,28 @@ export default function HomeScreen() {
                         </View>) : <Text style={styles.emptyText}>No keywords found.</Text>}
                       </View>
                     ) : key === "excuse" ? (
-                      <>
+                      <View style={{ gap: 12 }}>
                         <View style={styles.scoreHeader}>
-                          <Text style={styles.bigScoreSmall}>{value.excuse_structure_score}/100</Text>
-                          <Text style={styles.scorePill}>{value.score_label}</Text>
+                          <Text style={styles.bigScoreSmall}>{value.overall || "Explanation review"}</Text>
+                          <Text style={styles.scorePill}>{value.dimensions?.length || 0} areas checked</Text>
                         </View>
+                        {(value.dimensions || []).map((item: any) => (
+                          <View key={item.key} style={styles.qualityCard}>
+                            <View style={styles.predictionRow}>
+                              <Text style={styles.qualityTitle}>{item.title}</Text>
+                              <Text style={[styles.scorePill, item.status === "positive" && styles.qualityPositive]}>{item.assessment}</Text>
+                            </View>
+                            <Text style={styles.resultBody}>{item.explanation}</Text>
+                            {item.evidence?.length ? (
+                              <View style={styles.qualityEvidence}>
+                                <Text style={styles.fieldLabel}>FROM YOUR TEXT</Text>
+                                {item.evidence.map((line: string, i: number) => <Text key={i} style={styles.qualityQuote}>“{line}”</Text>)}
+                              </View>
+                            ) : null}
+                          </View>
+                        ))}
                         <Text style={styles.warningText}>{value.notice}</Text>
-                        {Object.entries(value.cue_counts || {}).map(([cue, count]) => <View key={cue} style={styles.cueRow}><Text style={styles.cueLabel}>{cue.replaceAll("_", " ")}</Text><Text style={styles.cueCount}>{String(count)}</Text></View>)}
-                        <Text style={styles.fieldLabel}>LINGUISTIC CUES FOUND</Text>
-                        {Object.entries(value.linguistic_cues || {}).map(([cue, terms]: any) => <View key={cue} style={styles.detailRow}><Text style={styles.detailLabel}>{cue.replaceAll("_", " ")}</Text><View style={styles.chipWrap}>{(terms || []).length ? terms.map((term: string) => <View key={term} style={styles.keywordChip}><Text style={styles.keywordText}>{term}</Text></View>) : <Text style={styles.counter}>None detected</Text>}</View></View>)}
-                        {value.questions_to_consider?.length ? <View style={{ gap: 7, marginTop: 6 }}><Text style={styles.fieldLabel}>QUESTIONS TO CONSIDER</Text>{value.questions_to_consider.map((q: string) => <Text key={q} style={styles.resultBody}>• {q}</Text>)}</View> : null}
-                      </>
+                      </View>
                     ) : key === "summary" ? (
                       <View style={{ gap: 10 }}><Text style={styles.resultBody}>{value.summary}</Text>{value.note ? <Text style={styles.counter}>{value.note}</Text> : null}{value.model ? <Text style={styles.counter}>Model: {value.model}</Text> : null}</View>
                     ) : (
@@ -546,7 +535,7 @@ export default function HomeScreen() {
         {tab === "compare" ? (
           <>
             <Panel>
-              <SectionTitle title="Semantic comparison" detail="Compare meaning with sentence embeddings." />
+              <SectionTitle title="Compare explanations" detail="Compare two versions to see how their meaning differs." />
               <Text style={styles.fieldLabel}>TEXT A</Text>
               <TextInput value={text} onChangeText={setText} maxLength={MAX_TEXT_CHARS} multiline textAlignVertical="top" style={styles.textArea} placeholderTextColor={colors.muted} />
               <Text style={styles.fieldLabel}>TEXT B</Text>
@@ -601,36 +590,11 @@ export default function HomeScreen() {
           </>
         ) : null}
 
-        {tab === "corpus" ? (
-          <>
-            <Panel>
-              <SectionTitle title="Semantic corpus search" detail="Search passages indexed from the optional FineWeb sample." />
-              <TextInput value={corpusQuery} onChangeText={setCorpusQuery} style={styles.singleInput} placeholder="Search the indexed corpus..." placeholderTextColor={colors.muted} />
-              <Pressable onPress={runSearch} disabled={loading} style={styles.primaryButton}>
-                {loading ? <ActivityIndicator color={colors.bg} /> : <Search size={18} color={colors.bg} />}
-                <Text style={styles.primaryButtonText}>Search corpus</Text>
-              </Pressable>
-            </Panel>
-            {loading && !corpusResult ? <ResultSkeleton colors={colors} styles={styles} /> : null}
-            {corpusResult ? (
-              <View style={{ gap: 10, marginTop: 14 }}>
-                <SectionTitle title="Retrieved passages" detail={`${corpusResult.indexed_passages ?? 0} passages in local index`} />
-                {corpusResult.message ? <Panel><Text style={styles.resultBody}>{corpusResult.message}</Text></Panel> : null}
-                {(corpusResult.results || []).map((item: any) => (
-                  <Panel key={item.id}>
-                    <View style={styles.predictionRow}><Text style={styles.scorePill}>SIMILARITY {item.similarity}</Text><Text style={styles.counter}>ID {item.id}</Text></View>
-                    <Text style={styles.resultBody}>{item.text}</Text>
-                  </Panel>
-                ))}
-              </View>
-            ) : null}
-          </>
-        ) : null}
 
         <View style={styles.footer}>
           <View style={styles.footerLine} />
-          <Text style={styles.footerTitle}>EXCUSEMOI / TEXT STUDIO</Text>
-          <Text style={styles.footerText}>Built with FastAPI · spaCy · Transformers · Sentence Transformers · Expo</Text>
+          <Text style={styles.footerTitle}>EXCUSEMOI / EXPLANATION ASSISTANT</Text>
+          <Text style={styles.footerText}>Understand your message. Improve clarity. Communicate better.</Text>
           <Text style={styles.footerText}>Language analysis, not a lie detector.</Text>
         </View>
       </ScrollView>
@@ -754,6 +718,11 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   emptyText: { color: colors.muted, fontSize: 12 },
   warningText: { color: colors.orange, fontSize: 11, lineHeight: 17, marginBottom: 10 },
   cueRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
+  qualityCard: { gap: 8, padding: 12, backgroundColor: colors.panel2, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
+  qualityTitle: { color: colors.text, fontSize: 13, fontWeight: "800" },
+  qualityPositive: { color: colors.accent },
+  qualityEvidence: { gap: 6, paddingTop: 4 },
+  qualityQuote: { color: colors.muted, fontSize: 12, lineHeight: 18, fontStyle: "italic" },
   cueLabel: { color: colors.muted, fontSize: 12, textTransform: "capitalize" },
   cueCount: { color: colors.text, fontSize: 12, fontWeight: "800" },
   resultBody: { color: colors.text, fontSize: 13, lineHeight: 20 },
