@@ -264,11 +264,48 @@ class NLPService:
         if len(text.split()) < 45:
             return {
                 "summary": text,
+                "chunks_summarized": 0,
                 "note": "Text is short; returned unchanged rather than forcing an abstractive summary.",
             }
+
         model = self._get_pipeline("summary", "summarization", SUMMARIZATION_MODEL)
-        output = model(text[:12000], max_length=120, min_length=25, do_sample=False, truncation=True)
-        return {"model": SUMMARIZATION_MODEL, "summary": output[0]["summary_text"]}
+        chunks = self._text_chunks(text, max_words=220, max_chunks=20)
+        summaries = []
+        for chunk in chunks:
+            word_count = len(chunk.split())
+            max_length = min(120, max(35, int(word_count * 0.55)))
+            min_length = min(25, max(8, int(max_length * 0.35)))
+            output = model(
+                chunk,
+                max_length=max_length,
+                min_length=min_length,
+                do_sample=False,
+                truncation=True,
+            )
+            if output and output[0].get("summary_text", "").strip():
+                summaries.append(output[0]["summary_text"].strip())
+
+        if not summaries:
+            raise ValueError("The summarization model returned no summary.")
+
+        combined = " ".join(summaries)
+        if len(summaries) > 1 and len(combined.split()) > 220:
+            final_output = model(
+                combined,
+                max_length=120,
+                min_length=25,
+                do_sample=False,
+                truncation=True,
+            )
+            if final_output and final_output[0].get("summary_text", "").strip():
+                combined = final_output[0]["summary_text"].strip()
+
+        return {
+            "model": SUMMARIZATION_MODEL,
+            "summary": combined,
+            "chunks_summarized": len(summaries),
+            "note": "Long passages are summarized in chunks and combined; details may still be omitted by abstractive summarization.",
+        }
 
     def zero_shot(self, text: str, labels: list[str]) -> dict[str, Any]:
         if not labels:
