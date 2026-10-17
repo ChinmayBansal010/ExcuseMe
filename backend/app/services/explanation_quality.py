@@ -83,9 +83,8 @@ class ExplanationQualityService:
                 "key": dimension["key"],
                 "title": dimension["title"],
                 "assessment": (
-                    "Looks clear" if positive_signal else
-                    "No clear conflict flagged" if dimension["key"] == "consistency"
-                    else "May need more detail"
+                    ("No clear conflict flagged" if positive_signal else "Possible conflict") if dimension["key"] == "consistency" else
+                    ("Looks good" if positive_signal else "May need more detail")
                 ),
                 "status": "positive" if positive_signal else "review",
                 "explanation": dimension["good"] if positive_signal else dimension["review"],
