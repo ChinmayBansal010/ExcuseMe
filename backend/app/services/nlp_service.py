@@ -87,7 +87,7 @@ class NLPService:
     @staticmethod
     def _text_chunks(text: str, max_words: int = 300, max_chunks: int = 20) -> list[str]:
         """Split long input on sentence boundaries to avoid silently scoring only its beginning."""
-        sentences = [part.strip() for part in re.split(r"(?<=[.!?])\\s+", text.strip()) if part.strip()]
+        sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", text.strip()) if part.strip()]
         if not sentences:
             return [text[:1800]]
         chunks: list[str] = []
