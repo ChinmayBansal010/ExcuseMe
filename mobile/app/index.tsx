@@ -31,6 +31,13 @@ const TOOLS: { id: Operation; title: string; desc: string; icon: any; tint: stri
 const DEMO = "I was going to submit the assignment yesterday, but my laptop stopped working right before the deadline. I contacted my teammate and promised to send the file this evening.";
 const MAX_TEXT_CHARS = 20000;
 
+function keywordBarWidth(score: unknown, keywords: any[]): string {
+  const numericScores = (Array.isArray(keywords) ? keywords : []).map((item) => Number(item?.score) || 0);
+  const maxScore = Math.max(0.0001, ...numericScores);
+  const numericScore = Number(score) || 0;
+  return `${Math.max(3, Math.min(100, (numericScore / maxScore) * 100))}%`;
+}
+
 function pretty(value: any): string {
   if (value === null || value === undefined) return "—";
   if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
@@ -405,7 +412,7 @@ export default function HomeScreen() {
                       <View style={{ gap: 10 }}>
                         {(value.keywords || []).length ? value.keywords.map((k: any, i: number) => <View key={k.term} style={styles.keywordResultRow}>
                           <View style={styles.keywordRank}><Text style={styles.keywordRankText}>{i + 1}</Text></View>
-                          <View style={{ flex: 1, gap: 5 }}><Text style={styles.entityText}>{k.term}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: String(Math.max(3, (k.score / Math.max(...value.keywords.map((x: any) => x.score || 0), 0.0001)) * 100) + "%"}]} /></View></View>
+                          <View style={{ flex: 1, gap: 5 }}><Text style={styles.entityText}>{k.term}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: keywordBarWidth(k.score, value.keywords)}]} /></View></View>
                           <Text style={styles.counter}>×{k.frequency ?? 0}</Text>
                         </View>) : <Text style={styles.emptyText}>No keywords found.</Text>}
                       </View>
