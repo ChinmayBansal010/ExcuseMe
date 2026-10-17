@@ -84,22 +84,83 @@ class NLPService:
             "sentence_list": [s.text.strip() for s in sentences],
         }
 
+    @staticmethod
+    def _text_chunks(text: str, max_words: int = 300, max_chunks: int = 20) -> list[str]:
+        """Split long input on sentence boundaries to avoid silently scoring only its beginning."""
+        sentences = [part.strip() for part in re.split(r"(?<=[.!?])\\s+", text.strip()) if part.strip()]
+        if not sentences:
+            return [text[:1800]]
+        chunks: list[str] = []
+        current: list[str] = []
+        word_count = 0
+        for sentence in sentences:
+            words = sentence.split()
+            if len(words) > max_words:
+                if current:
+                    chunks.append(" ".join(current))
+                    current, word_count = [], 0
+                for start in range(0, len(words), max_words):
+                    chunks.append(" ".join(words[start:start + max_words]))
+                continue
+            if current and word_count + len(words) > max_words:
+                chunks.append(" ".join(current))
+                current, word_count = [], 0
+            current.append(sentence)
+            word_count += len(words)
+        if current:
+            chunks.append(" ".join(current))
+        return chunks[:max_chunks]
+
     def sentiment(self, text: str) -> dict[str, Any]:
         model = self._get_pipeline("sentiment", "sentiment-analysis", SENTIMENT_MODEL)
-        output = model(text[:5000], truncation=True, max_length=512)
-        return {"model": SENTIMENT_MODEL, "prediction": output[0]["label"], "score": round(float(output[0]["score"]), 4)}
+        chunks = self._text_chunks(text)
+        totals: dict[str, float] = {}
+        total_weight = 0
+        for chunk in chunks:
+            weight = max(1, len(chunk.split()))
+            output = model(chunk, truncation=True, max_length=512)[0]
+            label = str(output["label"])
+            score = float(output["score"])
+            totals[label] = totals.get(label, 0.0) + score * weight
+            total_weight += weight
+        if not totals:
+            raise ValueError("No text available for sentiment analysis.")
+        # Average evidence across chunks rather than letting a long passage's first tokens dominate.
+        averages = {label: value / total_weight for label, value in totals.items()}
+        prediction = max(averages, key=averages.get)
+        return {
+            "model": SENTIMENT_MODEL,
+            "prediction": prediction,
+            "score": round(averages[prediction], 4),
+            "chunks_analyzed": len(chunks),
+            "note": "Longer text is scored in sentence-based chunks; the score is a model confidence, not a calibrated probability.",
+        }
 
     def emotion(self, text: str) -> dict[str, Any]:
         model = self._get_pipeline("emotion", "text-classification", EMOTION_MODEL)
-        output = model(text[:5000], top_k=None, truncation=True, max_length=512)
-        scores = output[0] if output and isinstance(output[0], list) else output
-        scores = sorted(scores, key=lambda x: x["score"], reverse=True)
+        chunks = self._text_chunks(text)
+        totals: dict[str, float] = {}
+        total_weight = 0
+        for chunk in chunks:
+            weight = max(1, len(chunk.split()))
+            output = model(chunk, top_k=None, truncation=True, max_length=512)
+            scores = output[0] if output and isinstance(output[0], list) else output
+            for item in scores:
+                label = str(item["label"])
+                totals[label] = totals.get(label, 0.0) + float(item["score"]) * weight
+            total_weight += weight
+        if not totals or total_weight == 0:
+            raise ValueError("No text available for emotion analysis.")
+        averaged = [
+            {"label": label, "score": round(value / total_weight, 4)}
+            for label, value in totals.items()
+        ]
+        averaged.sort(key=lambda item: item["score"], reverse=True)
         return {
             "model": EMOTION_MODEL,
-            "predictions": [
-                {"label": item["label"], "score": round(float(item["score"]), 4)}
-                for item in scores[:6]
-            ],
+            "predictions": averaged[:6],
+            "chunks_analyzed": len(chunks),
+            "note": "Emotion scores are model estimates. Mixed or long passages may contain multiple emotional tones.",
         }
 
     def entities(self, text: str) -> dict[str, Any]:
