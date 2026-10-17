@@ -53,7 +53,7 @@ def diagnostics():
         "gpu_available": gpu_available,
         "gpu_name": gpu_name,
         "inference_device": "cuda:0" if gpu_available else "cpu",
-        "corpus_database_configured": bool(os.getenv("DATABASE_PATH")),
+        "corpus_database_configured": bool(DATABASE_PATH),
         "corpus_database_exists": database_path.exists(),
     }
 
