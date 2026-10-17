@@ -484,10 +484,12 @@ export default function HomeScreen() {
                     ) : key === "pos" ? (
                       <View style={{ gap: 10 }}>
                         <Text style={styles.counter}>{(value.tokens || []).length} tokens · lemma, POS, tag and dependency</Text>
-                        <ScrollView horizontal showsHorizontalScrollIndicator><View style={styles.tokenTable}>
-                          <View style={[styles.tokenRow, styles.tokenHeader]}>{["TOKEN", "LEMMA", "POS", "TAG", "DEPENDENCY", "HEAD"].map((label) => <Text key={label} style={[styles.tokenCell, styles.tokenHeaderText]}>{label}</Text>)}</View>
-                          {(value.tokens || []).map((token: any, i: number) => <View key={String(token.text) + "-" + i} style={[styles.tokenRow, i % 2 === 0 && { backgroundColor: colors.panel2 }]}>{[token.text, token.lemma, token.pos, token.tag, token.dependency, token.head].map((part: any, j: number) => <Text key={j} selectable style={[styles.tokenCell, j === 2 && { color: colors.accent, fontWeight: "800" }]}>{String(part ?? "—")}</Text>)}</View>)}
-                        </View></ScrollView>
+                        <ScrollView style={{ maxHeight: 260 }} nestedScrollEnabled showsVerticalScrollIndicator>
+                          <ScrollView horizontal nestedScrollEnabled showsHorizontalScrollIndicator><View style={styles.tokenTable}>
+                            <View style={[styles.tokenRow, styles.tokenHeader]}>{["TOKEN", "LEMMA", "POS", "TAG", "DEPENDENCY", "HEAD"].map((label) => <Text key={label} style={[styles.tokenCell, styles.tokenHeaderText]}>{label}</Text>)}</View>
+                            {(value.tokens || []).map((token: any, i: number) => <View key={String(token.text) + "-" + i} style={[styles.tokenRow, i % 2 === 0 && { backgroundColor: colors.panel2 }]}>{[token.text, token.lemma, token.pos, token.tag, token.dependency, token.head].map((part: any, j: number) => <Text key={j} selectable style={[styles.tokenCell, j === 2 && { color: colors.accent, fontWeight: "800" }]}>{String(part ?? "—")}</Text>)}</View>)}
+                          </View></ScrollView>
+                        </ScrollView>
                       </View>
                     ) : key === "syntax" ? (
                       <View style={{ gap: 10 }}>{(value.sentences || []).map((sentence: any, i: number) => <View key={i} style={styles.syntaxCard}>
