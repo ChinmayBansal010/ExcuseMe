@@ -28,6 +28,36 @@ TOOLS = [
 ]
 
 
+@router.get("/diagnostics")
+def diagnostics():
+    """Report runtime capabilities without loading heavyweight NLP models."""
+    import os
+    from pathlib import Path
+
+    import torch
+
+    try:
+        gpu_available = bool(torch.cuda.is_available())
+        gpu_name = torch.cuda.get_device_name(0) if gpu_available else None
+    except Exception:
+        logger.exception("GPU diagnostics failed")
+        gpu_available = False
+        gpu_name = None
+
+    database_path = Path(os.getenv("DATABASE_PATH", "data/corpus.sqlite3"))
+    return {
+        "status": "ok",
+        "python_version": __import__("platform").python_version(),
+        "torch_version": torch.__version__,
+        "cuda_build": torch.version.cuda,
+        "gpu_available": gpu_available,
+        "gpu_name": gpu_name,
+        "inference_device": "cuda:0" if gpu_available else "cpu",
+        "corpus_database_configured": bool(os.getenv("DATABASE_PATH")),
+        "corpus_database_exists": database_path.exists(),
+    }
+
+
 @router.get("/tools")
 def get_tools():
     return {"tools": TOOLS}
