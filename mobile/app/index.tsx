@@ -421,7 +421,56 @@ export default function HomeScreen() {
                 {resultCards.map(([key, value]: any) => (
                   <Panel key={key} style={styles.resultPanel}>
                     <Text style={styles.resultTitle}>{String(key).replaceAll("_", " ").toUpperCase()}</Text>
-                    {key === "stats" && value ? (
+                    {key === "excuse" && value ? (
+                      <View style={{ gap: 16 }}>
+                        <View style={styles.qualityScoreCard}>
+                          <View style={styles.qualityScoreTop}>
+                            <View style={{ flex: 1, gap: 5 }}>
+                              <Text style={styles.qualityScoreEyebrow}>EXPLANATION QUALITY</Text>
+                              <Text style={styles.qualityScoreLabel}>{value.overall || "Analysis complete"}</Text>
+                              <Text style={styles.qualityScoreSub}>{value.score_label || "Model-estimated writing signals"}</Text>
+                            </View>
+                            <View style={styles.qualityScoreCircle}>
+                              <Text style={styles.qualityScoreNumber}>{Number.isFinite(Number(value.score)) ? Math.round(Number(value.score)) : "—"}%</Text>
+                              <Text style={styles.qualityScoreCaption}>QUALITY</Text>
+                            </View>
+                          </View>
+                          <View style={styles.qualityScoreTrack}>
+                            <View style={[styles.qualityScoreFill, { width: `${Math.max(0, Math.min(100, Number(value.score) || 0))}%` }]} />
+                          </View>
+                          <Text style={styles.qualityScoreNotice}>This is a model-estimated writing-quality score, not the probability that the excuse is true or false.</Text>
+                        </View>
+                        <View style={{ gap: 10 }}>
+                          <Text style={styles.qualitySectionTitle}>WHAT THE MODEL NOTICED</Text>
+                          {(value.dimensions || []).map((dimension: any) => {
+                            const score = Math.round(Math.max(0, Math.min(1, Number(dimension.score) || 0)) * 100);
+                            const positive = dimension.status === "positive";
+                            return (
+                              <View key={dimension.key} style={styles.qualityDimensionCard}>
+                                <View style={styles.qualityDimensionHeader}>
+                                  <View style={{ flex: 1, gap: 4 }}>
+                                    <Text style={styles.qualityDimensionTitle}>{dimension.title}</Text>
+                                    <Text style={[styles.qualityDimensionAssessment, positive ? styles.qualityDimensionGood : styles.qualityDimensionReview]}>{dimension.assessment}</Text>
+                                  </View>
+                                  <Text style={styles.qualityDimensionScore}>{score}%</Text>
+                                </View>
+                                <View style={styles.qualityDimensionTrack}>
+                                  <View style={[styles.qualityDimensionFill, { width: `${score}%`, backgroundColor: positive ? colors.green : colors.orange }]} />
+                                </View>
+                                <Text style={styles.resultBody}>{dimension.explanation}</Text>
+                                {Array.isArray(dimension.evidence) && dimension.evidence.length > 0 ? (
+                                  <View style={styles.qualityEvidence}>
+                                    <Text style={styles.qualityEvidenceLabel}>RELEVANT TEXT</Text>
+                                    {dimension.evidence.map((quote: string, index: number) => <Text key={index} style={styles.qualityQuote}>“{quote}”</Text>)}
+                                  </View>
+                                ) : null}
+                              </View>
+                            );
+                          })}
+                        </View>
+                        <Text style={styles.qualityScoreNotice}>{value.notice || "AI feedback describes wording only and cannot establish truth or deception."}</Text>
+                      </View>
+                    ) : key === "stats" && value ? (
                       <View style={styles.metricGrid}>
                         {[
                           ["WORDS", value.words], ["SENTENCES", value.sentences],
@@ -652,6 +701,29 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   emptyText: { color: colors.muted, fontSize: 12 },
   warningText: { color: colors.orange, fontSize: 11, lineHeight: 17, marginBottom: 10 },
   cueRow: { flexDirection: "row", justifyContent: "space-between", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: colors.border },
+  qualityScoreCard: { gap: 13, padding: 16, backgroundColor: colors.panel2, borderRadius: 16, borderWidth: 1, borderColor: colors.border },
+  qualityScoreTop: { flexDirection: "row", alignItems: "center", gap: 14 },
+  qualityScoreEyebrow: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 1.5 },
+  qualityScoreLabel: { color: colors.text, fontSize: 20, lineHeight: 25, fontWeight: "800" },
+  qualityScoreSub: { color: colors.muted, fontSize: 11, lineHeight: 16 },
+  qualityScoreCircle: { width: 86, height: 86, borderRadius: 43, borderWidth: 3, borderColor: colors.accent, alignItems: "center", justifyContent: "center", backgroundColor: colors.panel, gap: 1 },
+  qualityScoreNumber: { color: colors.accent, fontSize: 23, fontWeight: "900" },
+  qualityScoreCaption: { color: colors.muted, fontSize: 8, fontWeight: "800", letterSpacing: 0.8 },
+  qualityScoreTrack: { height: 8, backgroundColor: colors.border, borderRadius: 99, overflow: "hidden" },
+  qualityScoreFill: { height: 8, backgroundColor: colors.accent, borderRadius: 99 },
+  qualityScoreNotice: { color: colors.muted, fontSize: 10, lineHeight: 15 },
+  qualitySectionTitle: { color: colors.muted, fontSize: 10, fontWeight: "800", letterSpacing: 1.4 },
+  qualityDimensionCard: { gap: 9, padding: 13, backgroundColor: colors.panel, borderRadius: 13, borderWidth: 1, borderColor: colors.border },
+  qualityDimensionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 },
+  qualityDimensionTitle: { color: colors.text, fontSize: 13, fontWeight: "800" },
+  qualityDimensionAssessment: { fontSize: 10, fontWeight: "700" },
+  qualityDimensionGood: { color: colors.green },
+  qualityDimensionReview: { color: colors.orange },
+  qualityDimensionScore: { color: colors.text, fontSize: 17, fontWeight: "800" },
+  qualityDimensionTrack: { height: 5, backgroundColor: colors.border, borderRadius: 99, overflow: "hidden" },
+  qualityDimensionFill: { height: 5, borderRadius: 99 },
+  qualityEvidence: { gap: 6, paddingTop: 4 },
+  qualityEvidenceLabel: { color: colors.muted, fontSize: 9, fontWeight: "800", letterSpacing: 1.1 },
   qualityCard: { gap: 8, padding: 12, backgroundColor: colors.panel2, borderRadius: 12, borderWidth: 1, borderColor: colors.border },
   qualityTitle: { color: colors.text, fontSize: 13, fontWeight: "800" },
   qualityPositive: { color: colors.accent },
