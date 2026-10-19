@@ -44,9 +44,6 @@ def main() -> None:
     args = parser.parse_args()
     if not 0.1 <= args.test_size <= 0.5:
         raise SystemExit("--test-size must be between 0.1 and 0.5.")
-    if args.bins if hasattr(args, "bins") else False:
-        raise SystemExit("Unexpected calibration argument.")
-
     frame = pd.read_csv(args.csv)
     if args.text_column not in frame or args.label_column not in frame:
         raise SystemExit(
