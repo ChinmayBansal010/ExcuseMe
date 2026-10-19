@@ -42,16 +42,27 @@ def main() -> None:
         help="Where to save the fitted calibrator",
     )
     args = parser.parse_args()
+    if not 0.1 <= args.test_size <= 0.5:
+        raise SystemExit("--test-size must be between 0.1 and 0.5.")
+    if args.bins if hasattr(args, "bins") else False:
+        raise SystemExit("Unexpected calibration argument.")
 
     frame = pd.read_csv(args.csv)
     if args.text_column not in frame or args.label_column not in frame:
         raise SystemExit(
             f"CSV must contain columns {args.text_column!r} and {args.label_column!r}."
         )
-    frame = frame[[args.text_column, args.label_column]].dropna()
+    frame = frame[[args.text_column, args.label_column]].dropna().copy()
     frame[args.text_column] = frame[args.text_column].astype(str).str.strip()
+    frame = frame.drop_duplicates(subset=[args.text_column], keep="first")
     frame = frame[frame[args.text_column].str.len() > 0]
-    frame[args.label_column] = pd.to_numeric(frame[args.label_column], errors="raise").astype(int)
+    try:
+        numeric_labels = pd.to_numeric(frame[args.label_column], errors="raise")
+    except (TypeError, ValueError) as exc:
+        raise SystemExit("Labels must be numeric binary values: 1=excuse and 0=not excuse.") from exc
+    if not np.all(np.equal(numeric_labels, np.floor(numeric_labels))):
+        raise SystemExit("Labels must be integers: 1=excuse and 0=not excuse.")
+    frame[args.label_column] = numeric_labels.astype(int)
     if not set(frame[args.label_column].unique()).issubset({0, 1}):
         raise SystemExit("Labels must be binary: 1=excuse and 0=not excuse.")
     if frame[args.label_column].nunique() != 2 or frame[args.label_column].value_counts().min() < 4:
@@ -59,6 +70,8 @@ def main() -> None:
     if len(frame) < 40:
         raise SystemExit("At least 40 labelled examples are required for this script; 200+ diverse examples are recommended.")
 
+    if frame[args.text_column].nunique() < 10:
+        raise SystemExit("Provide at least 10 distinct text examples after removing duplicates.")
     texts = frame[args.text_column].tolist()
     labels = frame[args.label_column].to_numpy()
     train_indices, test_indices = train_test_split(
