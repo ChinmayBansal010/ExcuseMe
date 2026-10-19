@@ -21,23 +21,23 @@ const darkColors = {
 };
 
 const lightColors = {
-  bg: "#F5F5F0",
+  bg: "#F6F8FC",
   panel: "#FFFFFF",
-  panel2: "#ECEFE7",
-  border: "#DCE1D6",
-  text: "#20251D",
-  muted: "#687164",
-  accent: "#536D2C",
+  panel2: "#EEF2F8",
+  border: "#DCE3EE",
+  text: "#172033",
+  muted: "#5F6B80",
+  accent: "#365FC7",
   blue: "#315F9B",
   purple: "#7450A4",
   orange: "#985A22",
   red: "#B33D49",
-  green: "#3F762D",
-  input: "#FAFBF8",
-  selected: "#EDF3E4",
-  selectedBorder: "#A8BC8D",
-  pill: "#E7EEDC",
-  code: "#394337",
+  green: "#28764A",
+  input: "#FBFCFF",
+  selected: "#EAF0FF",
+  selectedBorder: "#A8BDF0",
+  pill: "#E8EEFC",
+  code: "#39465C",
 };
 
 type ThemeColors = typeof darkColors;
@@ -49,14 +49,14 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue>({
-  colors: darkColors,
-  isDark: true,
+  colors: lightColors,
+  isDark: false,
   toggleTheme: () => {},
   setTheme: () => {},
 });
 
 export function ThemeProvider({ children }: PropsWithChildren) {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const value = useMemo(() => ({
     colors: theme === "dark" ? darkColors : lightColors,
     isDark: theme === "dark",
