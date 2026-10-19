@@ -90,3 +90,15 @@ def test_calibrator_load_failure_falls_back_to_raw_score(monkeypatch, tmp_path):
     service.CALIBRATOR_PATH = tmp_path / "missing.joblib"
     assert service._get_calibrator() is None
     assert service._calibrator_loaded is True
+
+def test_corrupt_calibrator_falls_back_without_crashing(monkeypatch, tmp_path):
+    import pickle
+    from app.services import explanation_quality as quality_module
+
+    service = ExplanationQualityService()
+    service.CALIBRATOR_PATH = tmp_path / "broken.joblib"
+    service.CALIBRATOR_PATH.write_bytes(b"not a valid joblib artifact")
+    monkeypatch.setattr(quality_module.joblib, "load", lambda _path: (_ for _ in ()).throw(pickle.UnpicklingError("broken file")))
+
+    assert service._get_calibrator() is None
+    assert service._calibrator_loaded is True
