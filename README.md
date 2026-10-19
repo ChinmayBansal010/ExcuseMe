@@ -251,7 +251,7 @@ Set the variable before starting Expo. Restart Expo after changing it.
 
 ### Backend environment variables
 
-Defaults are defined in `backend/app/core/config.py`. `CORS_ORIGINS` accepts a comma-separated list of allowed browser origins; it defaults to `*` for local development. Set explicit origins before deploying publicly.
+Defaults are defined in `backend/app/core/config.py`.
 
 | Variable | Default / purpose |
 |---|---|
@@ -371,13 +371,6 @@ Check all model and dataset licence terms before redistribution, commercial use,
 ## Project documentation
 
 - [Roadmap](docs/ROADMAP.md) — implementation phases and planned work.
-- [Excuse score guide](docs/EXCUSE_SCORE_GUIDE.md) — score interpretation and calibration limits.
-- [Known limitations](docs/KNOWN_LIMITATIONS.md) — current model and product constraints.
-- [Privacy and data handling](docs/PRIVACY_AND_DATA_HANDLING.md) — text processing and deployment considerations.
-- [Local development](docs/LOCAL_DEVELOPMENT.md) — backend/frontend startup workflow.
-- [Testing strategy](docs/TESTING_STRATEGY.md) — unit, API, model, and frontend validation.
-- [Release checklist](docs/RELEASE_CHECKLIST.md) — repeatable pre-release checks.
-- [Deployment readiness](docs/DEPLOYMENT_READINESS.md) — production hardening checklist.
 - [Interactive API documentation](http://127.0.0.1:8000/docs) — available after starting the backend.
 - [Source repository](https://github.com/ChinmayBansal010/ExcuseMe).
 

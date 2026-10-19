@@ -13,12 +13,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["NLP"])
 
 TOOLS = [
-    {"id": "stats", "name": "Text statistics", "description": "Measures length, vocabulary, and readability.", "category": "analysis"},
-    {"id": "entities", "name": "Named entities", "description": "Finds possible people, organizations, places, and other entities.", "category": "understanding"},
-    {"id": "keywords", "name": "Keywords", "description": "Ranks informative terms in the passage.", "category": "analysis"},
-    {"id": "pos", "name": "Part-of-speech tags", "description": "Labels grammatical roles for tokens.", "category": "analysis"},
-    {"id": "syntax", "name": "Syntax", "description": "Explores sentence structure and dependency relations.", "category": "analysis"},
-    {"id": "zero_shot", "name": "Custom label classification", "description": "Scores text against user-provided labels.", "category": "understanding"},
     {"id": "language", "name": "Language detection", "description": "Identifies the language of a message.", "category": "understanding"},
     {"id": "sentiment", "name": "Tone", "description": "Estimates whether wording sounds positive or negative.", "category": "understanding"},
     {"id": "emotion", "name": "Emotion", "description": "Highlights possible emotional tone in a message.", "category": "understanding"},

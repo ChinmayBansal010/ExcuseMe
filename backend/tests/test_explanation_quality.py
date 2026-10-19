@@ -1,104 +1,45 @@
+from types import SimpleNamespace
+
 from app.services.explanation_quality import ExplanationQualityService
-from app.services import explanation_quality as quality_module
 from app.services.nlp_service import nlp_service
 
 
-class FakeZeroShotModel:
-    def __init__(self, score=0.73):
-        self.score = score
-        self.calls = []
-
+class FakeQualityModel:
     def __call__(self, text, candidate_labels, **kwargs):
-        self.calls.append({"text": text, "labels": candidate_labels, "kwargs": kwargs})
-        return {
-            "labels": [candidate_labels[0], candidate_labels[1], candidate_labels[2]],
-            "scores": [self.score, 0.2, 0.07],
-        }
+        if "contradictory" in text.lower() and "contradictory" in candidate_labels[1].lower():
+            labels = list(candidate_labels)
+            return {"labels": labels, "scores": [0.2, 0.8]}
+        return {"labels": list(candidate_labels), "scores": [0.8, 0.2]}
 
 
-def test_raw_score_uses_three_explicit_candidate_labels(monkeypatch):
+def test_explanation_quality_returns_four_consumer_friendly_dimensions(monkeypatch):
     service = ExplanationQualityService()
-    model = FakeZeroShotModel()
-    monkeypatch.setattr(nlp_service, "_get_pipeline", lambda *args, **kwargs: model)
+    doc = SimpleNamespace(sents=[
+        SimpleNamespace(text="My laptop broke before the deadline."),
+        SimpleNamespace(text="I will submit the assignment tomorrow."),
+    ])
+    monkeypatch.setattr(nlp_service, "_get_pipeline", lambda *args, **kwargs: FakeQualityModel())
+    monkeypatch.setattr(nlp_service, "_get_spacy", lambda: lambda _text: doc)
 
-    score = service.raw_score("My laptop broke before the deadline.")
+    result = service.analyze("My laptop broke before the deadline. I will submit the assignment tomorrow.")
 
-    assert score == 0.73
-    assert len(model.calls) == 1
-    call = model.calls[0]
-    assert len(call["labels"]) == 3
-    assert call["kwargs"]["multi_label"] is False
-    assert call["kwargs"]["hypothesis_template"] == "This text is {}."
-    assert call["kwargs"]["truncation"] is True
+    assert result["title"] == "Explanation quality"
+    assert len(result["dimensions"]) == 4
+    assert {item["key"] for item in result["dimensions"]} == {
+        "clarity", "specificity", "completeness", "consistency"
+    }
+    assert all("assessment" in item and "explanation" in item and "evidence" in item for item in result["dimensions"])
+    assert "cannot determine whether an explanation is true" in result["notice"]
 
 
-def test_raw_score_is_clamped_to_valid_range(monkeypatch):
+def test_consistency_finding_does_not_claim_no_conflict_when_model_flags_one(monkeypatch):
     service = ExplanationQualityService()
-    model = FakeZeroShotModel(score=1.5)
-    monkeypatch.setattr(nlp_service, "_get_pipeline", lambda *args, **kwargs: model)
-    assert service.raw_score("A reason was provided.") == 1.0
+    doc = SimpleNamespace(sents=[SimpleNamespace(text="The explanation has contradictory details.")])
+    monkeypatch.setattr(nlp_service, "_get_pipeline", lambda *args, **kwargs: FakeQualityModel())
+    monkeypatch.setattr(nlp_service, "_get_spacy", lambda: lambda _text: doc)
 
+    result = service.analyze("The explanation has contradictory details.")
+    consistency = next(item for item in result["dimensions"] if item["key"] == "consistency")
 
-def test_raw_score_rejects_empty_model_output(monkeypatch):
-    service = ExplanationQualityService()
-    monkeypatch.setattr(
-        nlp_service, "_get_pipeline",
-        lambda *args, **kwargs: lambda *a, **k: {"labels": [], "scores": []},
-    )
-    try:
-        service.raw_score("A statement.")
-    except RuntimeError as error:
-        assert "no assessment" in str(error)
-    else:
-        raise AssertionError("An empty model output should fail clearly")
-
-
-def test_analyze_marks_raw_score_as_uncalibrated(monkeypatch):
-    service = ExplanationQualityService()
-    monkeypatch.setattr(service, "raw_score", lambda _text: 0.62)
-    monkeypatch.setattr(service, "_get_calibrator", lambda: None)
-
-    result = service.analyze("The train was delayed.")
-
-    assert result["title"] == "Excuse likelihood"
-    assert result["score"] == 62
-    assert result["calibrated"] is False
-    assert "not a reliable probability" in result["notice"]
-    assert "calibration not fitted" in result["score_label"]
-
-
-def test_analyze_uses_calibrator_when_available(monkeypatch):
-    class FakeCalibrator:
-        def predict(self, scores):
-            assert scores == [0.62]
-            return [0.81]
-
-    service = ExplanationQualityService()
-    monkeypatch.setattr(service, "raw_score", lambda _text: 0.62)
-    monkeypatch.setattr(service, "_get_calibrator", lambda: FakeCalibrator())
-
-    result = service.analyze("The train was delayed.")
-
-    assert result["score"] == 81
-    assert result["calibrated"] is True
-    assert "estimated probability" in result["score_label"]
-    assert "held-out set" in result["notice"]
-
-
-def test_calibrator_load_failure_falls_back_to_raw_score(monkeypatch, tmp_path):
-    service = ExplanationQualityService()
-    service.CALIBRATOR_PATH = tmp_path / "missing.joblib"
-    assert service._get_calibrator() is None
-    assert service._calibrator_loaded is True
-
-def test_corrupt_calibrator_falls_back_without_crashing(monkeypatch, tmp_path):
-    import pickle
-    from app.services import explanation_quality as quality_module
-
-    service = ExplanationQualityService()
-    service.CALIBRATOR_PATH = tmp_path / "broken.joblib"
-    service.CALIBRATOR_PATH.write_bytes(b"not a valid joblib artifact")
-    monkeypatch.setattr(quality_module.joblib, "load", lambda _path: (_ for _ in ()).throw(pickle.UnpicklingError("broken file")))
-
-    assert service._get_calibrator() is None
-    assert service._calibrator_loaded is True
+    assert consistency["assessment"] == "Possible conflict"
+    assert consistency["status"] == "review"
