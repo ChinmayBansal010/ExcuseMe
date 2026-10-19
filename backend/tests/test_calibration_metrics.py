@@ -1,7 +1,7 @@
 import numpy as np
 from app.core.config import ZERO_SHOT_MODEL
 from app.services.explanation_quality import ExplanationQualityService
-from app.scripts.calibrate_excuse import expected_calibration_error
+from scripts.calibrate_excuse import expected_calibration_error
 
 def test_perfectly_calibrated_single_bin_has_zero_error():
     labels = np.array([0, 0, 1, 1])
