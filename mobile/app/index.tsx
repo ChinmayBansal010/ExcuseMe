@@ -209,9 +209,9 @@ export default function HomeScreen() {
 
         <View style={[styles.hero, width >= 760 && styles.heroWide]}>
           <View style={styles.heroCopy}>
-            <Text style={styles.kicker}>LINGUISTIC DECEPTION & EXCUSE PLAUSIBILITY</Text>
+            <Text style={styles.kicker}>LANGUAGE PATTERNS & EXPLANATIONS</Text>
             <Text style={[styles.headline, width < 480 && { fontSize: 32, lineHeight: 35 }]}>Read the cues.{"\n"}<Text style={styles.headlineAccent}>Not minds.</Text></Text>
-            <Text style={styles.subtitle}>Explore how explanations are worded — without pretending to detect lies.</Text>
+            <Text style={styles.subtitle}>Explore wording, tone, and meaning. The app analyses language, not truthfulness.</Text>
             <View style={styles.heroMeta}><View style={styles.metaChip}><Text style={styles.metaChipText}>LINGUISTIC CUES</Text></View><View style={styles.metaChip}><Text style={styles.metaChipText}>TEXT COMPARISON</Text></View></View>
           </View>
           {width >= 760 ? <View style={styles.heroVisual}><OrbitScene dark={isDark} /><View style={styles.visualCaption}><Text style={styles.visualCaptionTitle}>LANGUAGE, IN CONTEXT</Text><Text style={styles.visualCaptionText}>Cues · structure · meaning</Text></View></View> : null}
@@ -238,7 +238,7 @@ export default function HomeScreen() {
         <View style={styles.focusSection}>
           <View style={styles.focusHeading}><Text style={styles.focusTitle}>Start with a focus</Text><Text style={styles.focusHint}>PICK A LENS</Text></View>
           <View style={styles.presetRow}>
-            {([["excuse", "Explanation quality", "Clarity · detail · completeness"], ["profile", "Language & summary", "Identify language · summarize text"], ["emotion", "Tone & emotion", "Understand the emotional tone"]] as const).map(([key, title, detail]) => (
+            {([["excuse", "Excuse likelihood", "Assess justification cues"], ["profile", "Language & summary", "Identify language · summarize text"], ["emotion", "Tone & emotion", "Understand the emotional tone"]] as const).map(([key, title, detail]) => (
               <Pressable key={key} onPress={() => applyPreset(key)} style={({ pressed }) => [styles.presetCard, activePreset === key && styles.presetCardActive, pressed && styles.pressed]}>
                 <View style={[styles.presetMark, activePreset === key && styles.presetMarkActive]}>
                   {key === "excuse" ? <BrainCircuit size={18} color={activePreset === key ? colors.bg : colors.red} /> : key === "profile" ? <Languages size={18} color={activePreset === key ? colors.bg : colors.blue} /> : <AudioLines size={18} color={activePreset === key ? colors.bg : colors.purple} />}
