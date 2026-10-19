@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from pickle import UnpicklingError
 from typing import Any
 
 import joblib
@@ -31,7 +32,7 @@ class ExplanationQualityService:
             if self.CALIBRATOR_PATH.is_file():
                 try:
                     self._calibrator = joblib.load(self.CALIBRATOR_PATH)
-                except (OSError, ValueError, EOFError):
+                except (OSError, ValueError, EOFError, UnpicklingError):
                     self._calibrator = None
         return self._calibrator
 
